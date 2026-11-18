@@ -1,0 +1,174 @@
+<div class="modal-backdrop picker-modal-overlay" appDialog (dialogClose)="close()">
+  <div class="modal-box picker-modal">
+    <!-- Left column -->
+    <div class="picker-left">
+      <div class="modal-header">
+        <div class="modal-title">Plan activity</div>
+        <div class="modal-subtitle">
+          <span class="modal-subtitle-fullname">{{ promotion().firstName }} {{ promotion().lastName }} · </span>
+          <span>{{ promotion().fromRole }} → {{ promotion().toRole }}</span>
+          @if (promotion().pointsRequired) {
+            <span> — required {{ promotion().pointsRequired }} pts</span>
+          }
+        </div>
+        <div class="modal-bar">
+          <div class="lh-gap">
+            <span class="lh-gap__num"
+              >{{ projected() }} <small>/ {{ promotion().pointsRequired }} pts</small></span
+            >
+            @if ((promotion().pointsRequired ?? 0) > projected()) {
+              <span class="lh-gap__togo">{{ (promotion().pointsRequired ?? 0) - projected() }} pts to go</span>
+            } @else {
+              <span class="lh-gap__togo lh-gap__togo--reached">Goal reached</span>
+            }
+            <span class="lh-gap__pending">{{ promotion().pointsPlanned }} planned</span>
+          </div>
+
+          <app-progress-bar
+            label="Projected points"
+            [max]="promotion().pointsRequired ?? projected()"
+            [value]="promotion().pointsAchieved"
+            [planned]="projected() - promotion().pointsAchieved"
+          ></app-progress-bar>
+        </div>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Search activities…"
+        class="input input--sm picker-search"
+        [value]="search | async"
+        (input)="onSearch($any($event.target).value)"
+      />
+
+      <div class="picker-categories">
+        <button
+          class="picker-cat-btn"
+          [class.picker-cat-btn--active]="(activeCategory | async) === null"
+          (click)="selectCategory(null)"
+        >
+          All
+        </button>
+        @for (cat of categories$ | async; track cat) {
+          <button
+            class="picker-cat-btn"
+            [class.picker-cat-btn--active]="(activeCategory | async) === cat"
+            (click)="selectCategory(cat)"
+          >
+            {{ cat | categoryLabel }}
+          </button>
+        }
+      </div>
+
+      <div class="picker-list">
+        @if (filtered$ | async; as groups) {
+          @if (groups.length === 0) {
+            <div class="picker-empty">No activities found</div>
+          }
+          @for (group of groups; track group.category) {
+            <div class="lh-cat-title lh-cat-title--list">{{ group.category | categoryLabel }}</div>
+            @for (activity of group.activities; track activity.id) {
+              <div
+                class="picker-item"
+                [class.picker-item--selected]="basketIds().has(activity.id)"
+                [class.disabled]="!!activity.usedIn"
+                [tooltip]="usageTooltip(activity)"
+                (click)="toggleInBasket(activity)"
+              >
+                <span class="picker-item__name"
+                  >{{ activity.name }}
+                  <span class="picker-item__period">· {{ activity.withinPeriod | periodLabel }}</span></span
+                >
+                <span class="picker-item__pts">{{ activity.points }} pts</span>
+              </div>
+            }
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Right panel: In this promotion -->
+    <div class="lh-panel">
+      <div class="lh-panel__head">In this promotion</div>
+
+      <div class="lh-panel__scroll">
+        <!-- Already added activities(three sections - approved, planned, reported) -->
+        @for (section of lockedSections(); track section.status) {
+          @if (section.activities.length > 0) {
+            <div class="lh-cat-title">{{ lockedSectionTitle(section.status) }}</div>
+            @for (a of section.activities; track a.employeeActivityId) {
+              <div class="lh-act-row lh-act-row--locked">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style="color: var(--success-ink); flex-shrink: 0"
+                >
+                  <rect x="5" y="11" width="14" height="9" rx="1.5" fill="currentColor" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+                <span class="lh-act-name">{{ a.name }}</span>
+                <span class="lh-act-pts">{{ a.pointsSnapshot }} pts</span>
+              </div>
+            }
+          }
+        }
+
+        <!-- Basket (newly picked) -->
+        @if (basket().length > 0) {
+          <div class="lh-cat-title" [class.lh-cat-title--spaced]="isTitleSpaceNeeded()">Planning now</div>
+          @for (a of basket(); track a.id) {
+            <div class="lh-act-row">
+              <span class="lh-chip">{{ a.category | categoryLabel }}</span>
+              <span class="lh-act-name">{{ a.name }}</span>
+              <span class="lh-act-pts">{{ a.points }} pts</span>
+              <button
+                class="btn btn--danger btn--sm btn--icon lh-btn-remove"
+                tooltip="Remove"
+                aria-label="Remove"
+                type="button"
+                (click)="removeFromBasket(a)"
+              >
+                <app-action-icon name="trash" />
+              </button>
+            </div>
+          }
+        }
+
+        @if (isNoActivities()) {
+          <div class="lh-panel__empty">No activities yet</div>
+        }
+      </div>
+
+      <div class="lh-totals">
+        @if (promotion().pointsRequired) {
+          <div class="lh-totals-row">
+            <span class="lh-totals-label">Required</span>
+            <span class="lh-totals-label lh-totals-label--bold">{{ promotion().pointsRequired }} pts</span>
+          </div>
+        }
+        <div class="lh-totals-row">
+          <span class="lh-totals-label">Projected if all approved</span>
+          <span class="lh-totals-big" [class.lh-totals-big--ok]="projected() >= (promotion().pointsRequired ?? 0)">
+            {{ projected() }} pts
+          </span>
+        </div>
+      </div>
+
+      @if (overplannedBy() > 0) {
+        <div class="lh-overplan-hint">
+          You've planned more than required. You can plan fewer, or the remaining {{ overplannedBy() }} pts will carry
+          over to your next promotion.
+        </div>
+      }
+
+      <div class="modal-actions picker-actions">
+        <button class="btn btn--secondary" (click)="close()">Cancel</button>
+        <button class="btn btn--primary" [disabled]="basket().length === 0" (click)="confirm()">
+          Plan {{ basket().length > 0 ? basket().length : '' }} {{ basket().length === 1 ? 'activity' : 'activities' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

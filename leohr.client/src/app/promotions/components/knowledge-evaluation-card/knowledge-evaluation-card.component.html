@@ -1,0 +1,59 @@
+<section class="detail-card" aria-labelledby="ke-title">
+  <div class="detail-card__header">
+    <h2 id="ke-title" class="detail-card__title">Knowledge evaluation</h2>
+    @if (canRequest()) {
+      <button type="button" class="btn btn--primary btn--sm" (click)="modalOpen.set(true)">Plan KE</button>
+    } @else if (requestToEdit()) {
+      <button type="button" class="btn btn--secondary btn--sm" (click)="modalOpen.set(true)">Edit request</button>
+    }
+  </div>
+
+  @if (loaded()) {
+    @if (evaluation(); as e) {
+      <dl class="m-0 grid grid-cols-[max-content_1fr] gap-x-5 gap-y-2.5 text-sm">
+        <dt class="text-(--ink-secondary)">Status</dt>
+        <dd class="m-0">
+          <span class="badge badge--{{ status()!.modifier }}">{{ status()!.label }}</span>
+        </dd>
+
+        @if (!e.evaluationDate || !e.conductedByName) {
+          <dt class="text-(--ink-secondary)">Requested</dt>
+          <dd class="m-0">{{ e.requestedDate | date: 'dd MMM yyyy' }} · {{ optionLabel[e.requestedOption] }}</dd>
+
+          @if (e.comment) {
+            <dt class="text-(--ink-secondary)">Comment</dt>
+            <dd class="m-0 break-words whitespace-pre-wrap">{{ e.comment }}</dd>
+          }
+        }
+
+        <dt class="text-(--ink-secondary)">KE date</dt>
+        <dd class="m-0">{{ e.evaluationDate ? (e.evaluationDate | date: 'dd MMM yyyy') : 'Not scheduled yet' }}</dd>
+
+        @if (e.conductedByName) {
+          <dt class="text-(--ink-secondary)">Conducted by</dt>
+          <dd class="m-0">{{ e.conductedByName }}</dd>
+        }
+
+        @if (e.link) {
+          <dt class="text-(--ink-secondary)">Link</dt>
+          <dd>
+            <a class="underline" [href]="e.link" target="_blank" rel="noopener noreferrer">Results</a>
+          </dd>
+        }
+      </dl>
+    } @else {
+      <p class="m-0 text-sm text-(--ink-secondary)">
+        {{ criterionMet() ? 'Marked as met manually.' : 'No knowledge evaluation has been requested yet.' }}
+      </p>
+    }
+  }
+</section>
+
+@if (modalOpen()) {
+  <app-knowledge-evaluation-request-modal
+    [promotionId]="promotionId()"
+    [evaluation]="requestToEdit()"
+    (saved)="onRequested()"
+    (closeModal)="modalOpen.set(false)"
+  />
+}

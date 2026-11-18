@@ -1,0 +1,468 @@
+<ng-template #icoUp>
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M10 15V5M5.5 9.5 10 5l4.5 4.5" />
+  </svg>
+</ng-template>
+<ng-template #icoDown>
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M10 5v10M5.5 10.5 10 15l4.5-4.5" />
+  </svg>
+</ng-template>
+<ng-template #icoTrash>
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10" />
+  </svg>
+</ng-template>
+
+<ng-template #formBody>
+  <div class="form-field">
+    <label for="ote-title">Task title</label>
+    <input
+      class="input"
+      id="ote-title"
+      maxlength="200"
+      type="text"
+      placeholder="e.g. Order corporate SIM card"
+      [value]="title()"
+      (input)="title.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="form-field">
+    <label for="ote-milestone">Milestone</label>
+    <select
+      class="input"
+      id="ote-milestone"
+      [class.ote__select--empty]="milestoneId() === null"
+      [ngModel]="milestoneId()"
+      (ngModelChange)="milestoneId.set($event)"
+    >
+      <option [ngValue]="null" disabled>Select a milestone</option>
+      @for (milestone of milestones(); track milestone.id) {
+        <option [ngValue]="milestone.id">{{ milestone.name }}</option>
+      }
+    </select>
+    <p class="ote__hint">
+      Groups the task for progress reporting. Independent of the phase, which drives the due date.
+    </p>
+  </div>
+
+  <div class="modal-grid-2">
+    <div class="form-field">
+      <label for="ote-phase">Phase</label>
+      <select class="input" id="ote-phase" [ngModel]="phase()" (ngModelChange)="phase.set($event)">
+        @for (p of phases; track p) {
+          <option [value]="p">{{ phaseLabels[p] }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="ote-responsible-role">Responsible role</label>
+      <select
+        class="input"
+        id="ote-responsible-role"
+        [ngModel]="responsibleRoleKey()"
+        (ngModelChange)="responsibleRoleKey.set($event)"
+      >
+        <option [ngValue]="null">Not set</option>
+        @for (role of responsibleRoles(); track role.key) {
+          <option [ngValue]="role.key">{{ role.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="form-field">
+    <label for="ote-due-offset">Due rule</label>
+    <div class="ote__due">
+      <select
+        class="input"
+        id="ote-due-direction"
+        aria-label="Direction"
+        [ngModel]="dueDirection()"
+        [disabled]="isOnAnchorDay()"
+        (ngModelChange)="dueDirection.set($event)"
+      >
+        @for (d of directions; track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+      <input
+        class="input"
+        id="ote-due-offset"
+        type="number"
+        aria-label="Offset in calendar days"
+        min="0"
+        step="1"
+        [max]="maxDueOffsetDays"
+        [value]="dueOffsetDays()"
+        (input)="dueOffsetDays.set($any($event.target).valueAsNumber)"
+      />
+      <select
+        class="input"
+        id="ote-due-anchor"
+        aria-label="Anchor"
+        [ngModel]="dueAnchor()"
+        (ngModelChange)="dueAnchor.set($event)"
+      >
+        @for (a of anchors; track a) {
+          <option [value]="a">{{ anchorLabels[a] }}</option>
+        }
+      </select>
+    </div>
+    <p class="ote__hint">{{ duePreview() }}</p>
+  </div>
+
+  <div class="form-field">
+    <label for="ote-description">Description <span class="field-optional">optional</span></label>
+    <input
+      class="input"
+      id="ote-description"
+      maxlength="2000"
+      type="text"
+      placeholder="Shown on the task detail screen"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+    />
+  </div>
+
+  <div class="form-field">
+    <label for="ote-applies-to-0">Applies to</label>
+    <div class="filter-tabs">
+      @for (option of appliesToOptions; track option; let i = $index) {
+        <button
+          [id]="'ote-applies-to-' + i"
+          type="button"
+          class="filter-tab"
+          [class.filter-tab--active]="appliesTo() === option"
+          [attr.aria-pressed]="appliesTo() === option"
+          (click)="selectAppliesTo(option)"
+        >
+          {{ appliesToLabels[option] }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isOptional()) {
+    <div class="form-field">
+      <label for="ote-suggested-for-0">Suggested for</label>
+      <div class="filter-tabs ote__wrap">
+        @for (level of levelOptions(); track level; let i = $index) {
+          <button
+            [id]="'ote-suggested-for-' + i"
+            type="button"
+            class="filter-tab"
+            [class.filter-tab--active]="isLevelSelected(level)"
+            [attr.aria-pressed]="isLevelSelected(level)"
+            (click)="toggleLevel(level)"
+          >
+            {{ levelLabels[level] }}
+          </button>
+        } @empty {
+          <p class="ote__hint">No active promotion criteria to take levels from.</p>
+        }
+      </div>
+      <p class="ote__hint">Pre-ticks this template in the new-flow wizard for matching hires.</p>
+    </div>
+  }
+
+  <section class="ote__stack otp__fields">
+    <div class="modal-label">
+      Fields the assignee fills · {{ fields().length === 0 ? 'none added' : fields().length + ' added' }}
+    </div>
+
+    @for (field of fields(); track field.uid; let first = $first, last = $last) {
+      <div class="ote__field">
+        <div class="ote__row">
+          <span class="ote__badge">{{ fieldTypeLabels[field.fieldType] }}</span>
+          <div class="form-field ote__grow">
+            <input
+              class="input"
+              type="text"
+              placeholder="Field label"
+              maxlength="200"
+              [attr.aria-label]="fieldTypeLabels[field.fieldType] + ' label'"
+              [value]="field.label"
+              (input)="updateFieldLabel(field, $any($event.target).value)"
+            />
+          </div>
+          <button
+            class="btn btn--secondary btn--sm btn--icon"
+            tooltip="Move up"
+            aria-label="Move up"
+            type="button"
+            [disabled]="first"
+            (click)="moveField(field, -1)"
+          >
+            <ng-container [ngTemplateOutlet]="icoUp" />
+          </button>
+          <button
+            class="btn btn--secondary btn--sm btn--icon"
+            tooltip="Move down"
+            aria-label="Move down"
+            type="button"
+            [disabled]="last"
+            (click)="moveField(field, 1)"
+          >
+            <ng-container [ngTemplateOutlet]="icoDown" />
+          </button>
+          <button
+            class="btn btn--danger btn--sm btn--icon"
+            tooltip="Remove field"
+            aria-label="Remove field"
+            type="button"
+            (click)="requestRemoveField(field)"
+          >
+            <ng-container [ngTemplateOutlet]="icoTrash" />
+          </button>
+        </div>
+
+        @switch (field.fieldType) {
+          @case (FieldType.Checklist) {
+            <div class="ote__stack">
+              @for (item of field.checklistItems; track item.uid) {
+                <div class="ote__row">
+                  <div class="form-field ote__grow">
+                    <input
+                      class="input"
+                      type="text"
+                      placeholder="Item text"
+                      maxlength="300"
+                      aria-label="Checklist item"
+                      [id]="'ote-item-' + item.uid"
+                      [value]="item.text"
+                      (input)="updateChecklistItem(field, item, $any($event.target).value)"
+                      (keydown.enter)="addChecklistItemAfter(field, item, $event)"
+                    />
+                  </div>
+                  <button
+                    class="btn btn--danger btn--sm btn--icon"
+                    tooltip="Remove item"
+                    aria-label="Remove item"
+                    type="button"
+                    [disabled]="field.checklistItems.length === 1"
+                    (click)="removeChecklistItem(field, item)"
+                  >
+                    <ng-container [ngTemplateOutlet]="icoTrash" />
+                  </button>
+                </div>
+              }
+              <div>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="addChecklistItem(field)">
+                  + Add item
+                </button>
+              </div>
+            </div>
+          }
+          @default {
+            @if (field.fieldType === FieldType.EmployeePicker) {
+              <div class="form-field">
+                <label [for]="'ote-restriction-' + field.uid">Who can be picked</label>
+                <select
+                  class="input"
+                  [id]="'ote-restriction-' + field.uid"
+                  [ngModel]="field.personRestrictionKey"
+                  (ngModelChange)="updateFieldRestriction(field, $event)"
+                >
+                  <option [ngValue]="null">Anyone in the directory</option>
+                  @for (option of personRestrictions(); track option.key) {
+                    <option [ngValue]="option.key">{{ option.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+            <div class="form-field">
+              <input
+                class="input"
+                type="text"
+                [placeholder]="hintPlaceholder(field.fieldType)"
+                maxlength="300"
+                [attr.aria-label]="hintPlaceholder(field.fieldType)"
+                [value]="field.hint"
+                (input)="updateFieldHint(field, $any($event.target).value)"
+              />
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <div class="ote__row ote__wrap">
+      @for (type of fieldTypes; track type) {
+        <button type="button" class="btn btn--secondary btn--sm" (click)="addField(type)">
+          + {{ fieldTypeLabels[type] }}
+        </button>
+      }
+    </div>
+  </section>
+</ng-template>
+
+<ng-template #previewBody>
+  <section class="modal-preview ote__stack ote__preview">
+    <div class="ote__preview-head">
+      <span class="modal-preview-label">What the assignee sees</span>
+      <span class="ote__preview-meta">
+        @if (responsibleRoleName(); as roleName) {
+          {{ roleName }} ·
+        }
+        {{ duePreview() }}
+      </span>
+    </div>
+    <div class="ote__preview-task">
+      <h3 class="ote__preview-title">{{ title().trim() || 'Untitled task' }}</h3>
+      @if (description().trim()) {
+        <p class="ote__preview-desc">{{ description() }}</p>
+      }
+    </div>
+
+    @for (field of fields(); track field.uid) {
+      <div class="form-field">
+        <label [for]="'ote-preview-' + field.uid">
+          {{ field.label.trim() || fieldTypeLabels[field.fieldType] }}
+        </label>
+        @switch (field.fieldType) {
+          @case (FieldType.Note) {
+            <textarea
+              class="input"
+              [id]="'ote-preview-' + field.uid"
+              rows="3"
+              [placeholder]="field.hint || 'Type here'"
+              disabled
+            ></textarea>
+          }
+          @case (FieldType.Checklist) {
+            <div [id]="'ote-preview-' + field.uid" class="ote__preview-checks">
+              @for (item of nonEmptyItems(field); track item.uid) {
+                <label class="modal-check"><input type="checkbox" disabled /> {{ item.text }}</label>
+              } @empty {
+                <p class="ote__hint">No items yet</p>
+              }
+            </div>
+          }
+          @case (FieldType.EmployeePicker) {
+            <input
+              class="input"
+              [id]="'ote-preview-' + field.uid"
+              type="text"
+              [placeholder]="field.hint || 'Search employee…'"
+              disabled
+            />
+          }
+        }
+      </div>
+    }
+    <p class="ote__hint">Marking the task complete requires every field filled and every checklist item ticked.</p>
+  </section>
+</ng-template>
+
+@if (layout() === 'page') {
+  <div>
+    <a class="ob-back-link" routerLink="/onboarding/templates">&larr; Task templates</a>
+
+    <header class="page-header flex-wrap gap-4">
+      <div class="page-header__text">
+        <h1 class="page-title">{{ title().trim() || 'Untitled task' }}</h1>
+        <p class="page-subtitle">{{ pageSubtitle() }}</p>
+      </div>
+      <div class="page-header__actions flex-wrap">
+        <span class="ote__validation">{{ validationHint() }}</span>
+        <button type="button" class="btn btn--secondary" [disabled]="saving()" (click)="duplicate.emit()">
+          Duplicate
+        </button>
+        <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="submit()">
+          {{ saving() ? 'Saving…' : 'Save Template' }}
+        </button>
+      </div>
+    </header>
+
+    <div class="otp__grid">
+      <section class="otp__card">
+        <ng-container [ngTemplateOutlet]="formBody" />
+      </section>
+
+      <aside class="otp__note" role="note">
+        <strong>Saving affects future flows only</strong>
+        @if (runningFlowCount(); as count) {
+          <span>
+            The {{ count }} running {{ count === 1 ? 'flow keeps' : 'flows keep' }} the tasks
+            {{ count === 1 ? 'it was' : 'they were' }} generated with.
+          </span>
+        }
+      </aside>
+    </div>
+  </div>
+} @else {
+  <div class="modal-backdrop" appDialog (dialogClose)="requestClose()">
+    <div class="modal-box ote">
+      <div class="modal-header ote__header">
+        <h2 class="modal-title">New Template</h2>
+        <p class="modal-subtitle">Added to every flow created after saving. Running flows are unaffected.</p>
+        <button
+          type="button"
+          class="ote__close"
+          aria-label="Close editor"
+          [disabled]="saving()"
+          (click)="requestClose()"
+        >
+          &times;
+        </button>
+      </div>
+
+      <ng-container [ngTemplateOutlet]="formBody" />
+      <ng-container [ngTemplateOutlet]="previewBody" />
+
+      <div class="modal-actions">
+        <span class="ote__validation">{{ validationHint() }}</span>
+        <button type="button" class="btn btn--secondary" [disabled]="saving()" (click)="requestClose()">Cancel</button>
+        <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="submit()">
+          {{ saving() ? 'Saving…' : 'Create Template' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (pendingFieldRemoval(); as field) {
+  <app-confirm-dialog
+    title="Remove this field?"
+    [message]="'“' + (field.label || fieldTypeLabels[field.fieldType]) + '” has content that will be lost.'"
+    confirmLabel="Remove"
+    (confirm)="confirmRemoveField()"
+    (dismissed)="pendingFieldRemoval.set(null)"
+  />
+}
+
+@if (showUnsavedConfirm()) {
+  <app-confirm-dialog
+    title="Discard unsaved changes?"
+    message="Your changes to this template have not been saved."
+    confirmLabel="Discard"
+    (confirm)="confirmDiscard()"
+    (dismissed)="showUnsavedConfirm.set(false)"
+  />
+}

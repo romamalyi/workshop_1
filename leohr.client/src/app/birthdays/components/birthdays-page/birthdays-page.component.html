@@ -1,0 +1,153 @@
+<div class="page-container">
+  <!-- Wish card modal -->
+  @if (wishModalEntry) {
+    <div class="modal-backdrop" appDialog (dialogClose)="closeWishModal()">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">Send wish card</div>
+          <div class="modal-subtitle">
+            to {{ wishModalEntry.employee.firstName }} {{ wishModalEntry.employee.lastName }}
+          </div>
+        </div>
+        <div>
+          <div class="modal-label">Subject</div>
+          <input class="input" type="text" [value]="wishSubject" (input)="wishSubject = $any($event.target).value" />
+        </div>
+        <div>
+          <div class="modal-label">Message</div>
+          <textarea class="input" [value]="wishBody" (input)="wishBody = $any($event.target).value" rows="7"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn--secondary" (click)="closeWishModal()">Cancel</button>
+          <button class="btn btn--primary" (click)="sendWishCard()">✉ Send</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Monthly digest modal -->
+  @if (digestModalMonth) {
+    <div class="modal-backdrop" appDialog (dialogClose)="closeDigestModal()">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">{{ digestModalMonth.monthName }} birthday digest</div>
+          <div class="modal-subtitle">Choose who to include in the digest email</div>
+        </div>
+        <div>
+          <div class="modal-label">Recipients</div>
+          <div class="bday-digest-list">
+            @for (entry of digestModalMonth.entries; track entry) {
+              <label class="bday-digest-item">
+                <input
+                  type="checkbox"
+                  [checked]="digestIncluded[entryKey(entry)]"
+                  (change)="digestIncluded[entryKey(entry)] = $any($event.target).checked"
+                />
+                <app-avatar
+                  [initials]="getInitials(entry.employee)"
+                  [color]="getAvatarColor(entry.employee)"
+                  [size]="36"
+                ></app-avatar>
+                <div class="bday-digest-item-info">
+                  <span class="bday-digest-item-name"
+                    >{{ entry.employee.firstName }} {{ entry.employee.lastName }}</span
+                  >
+                  <span class="bday-digest-item-date">{{ entry.day }} {{ monthAbbr(digestModalMonth) }}</span>
+                </div>
+              </label>
+            }
+          </div>
+        </div>
+        <div>
+          <div class="modal-label">Personal note (optional)</div>
+          <textarea
+            class="input"
+            [value]="digestMessage"
+            (input)="digestMessage = $any($event.target).value"
+            placeholder="Add a personal message to the digest…"
+            rows="3"
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn--secondary" (click)="closeDigestModal()">Cancel</button>
+          <button class="btn btn--primary" (click)="confirmSendDigest()">✉ Send digest</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (state$ | async; as state) {
+    @if (state.loading) {
+      <p class="loading-text">Loading...</p>
+    }
+    @if (state.error) {
+      <p class="error-text">{{ state.error }}</p>
+    }
+    @if (!state.loading && !state.error && state.groups.length === 0) {
+      <p class="empty-text">No birthdays found.</p>
+    }
+    @for (group of state.groups; track group) {
+      <div class="bday-month-section">
+        <div class="bday-month-header">
+          <div class="bday-month-header-left">
+            <span class="bday-month-label" [class.bday-month-label--current]="group.isCurrent">
+              {{ group.monthName }}
+            </span>
+            @if (group.isCurrent) {
+              <span class="badge badge--info">Current month</span>
+            }
+          </div>
+          @if (group.isCurrent) {
+            @if (!digestSentAt[group.month]) {
+              <button class="btn btn--primary" (click)="openDigestModal(group)" type="button">
+                ✉ Send monthly digest
+              </button>
+            }
+            @if (digestSentAt[group.month]) {
+              <span class="bday-digest-sent"> <span class="bday-digest-sent-check">✓</span> Sent </span>
+            }
+          }
+        </div>
+        <div class="bday-grid">
+          @for (entry of group.entries; track entry) {
+            <div class="bday-card" [class.bday-card--today]="daysUntil(group, entry) === 0">
+              <app-avatar
+                [initials]="getInitials(entry.employee)"
+                [color]="getAvatarColor(entry.employee)"
+                [size]="36"
+              ></app-avatar>
+              <span
+                class="bday-days"
+                [class.bday-today]="daysUntil(group, entry) === 0"
+                [class.bday-soon]="entry.highlight && daysUntil(group, entry) > 0"
+                [class.bday-upcoming]="!entry.highlight && daysUntil(group, entry) > 0"
+                [class.bday-past]="daysUntil(group, entry) < 0"
+              >
+                {{ daysUntilLabel(group, entry) }}
+              </span>
+              <div class="bday-name">{{ entry.employee.firstName }} {{ entry.employee.lastName }}</div>
+              <div class="bday-info">
+                {{ entry.employee.profile || entry.employee.seniority || '' }}
+                &middot; {{ entry.day }} {{ monthAbbr(group) }}
+              </div>
+              @if (!wishSentFor[entryKey(entry)]) {
+                <button
+                  class="btn btn--sm wish-btn"
+                  [class.btn--primary]="daysUntil(group, entry) === 0"
+                  [class.btn--secondary]="daysUntil(group, entry) !== 0"
+                  (click)="openWishModal(group, entry)"
+                  type="button"
+                >
+                  Send wish card
+                </button>
+              }
+              @if (wishSentFor[entryKey(entry)]) {
+                <span class="wish-sent-label"> <span class="wish-sent-check">✓</span> Sent </span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

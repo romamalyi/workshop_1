@@ -1,0 +1,60 @@
+<div class="modal-backdrop" appDialog (dialogClose)="close()">
+  <div class="modal-box modal-box--overflow-visible">
+    <div class="modal-header">
+      <div class="modal-title">Knowledge evaluation · {{ evaluation().employeeName }}</div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="form-field">
+        <label for="ke-status">Status</label>
+        <select class="input" #statusSelect id="ke-status" (change)="status.set($any(statusSelect.value))">
+          @for (item of statuses; track item.value) {
+            <option [value]="item.value" [selected]="item.value === status()">{{ item.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="ke-conductor">Conducted by</label>
+        <app-search-select
+          inputId="ke-conductor"
+          label="Conducted by"
+          placeholder="Search employee…"
+          [options]="conductorOptions()"
+          [selectedId]="conductorId()"
+          [selectedLabel]="conductorName() || null"
+          (picked)="selectConductor($event)"
+        />
+      </div>
+
+      <div class="form-field">
+        <label>KE date</label>
+        <app-date-picker [(value)]="date" [disablePast]="isPlanned()" />
+        <p class="text-xs text-(--ink-secondary)">
+          Employee asked for:
+          {{ requestedOnDate() ? 'on' : 'any time after' }}
+          {{ evaluation().requestedDate | date: 'dd MMM yyyy' }}
+        </p>
+      </div>
+
+      <div class="form-field">
+        <label for="ke-link">Link</label>
+        <input
+          class="input"
+          #linkInput
+          id="ke-link"
+          type="text"
+          maxlength="500"
+          placeholder="https://…"
+          [value]="link()"
+          (input)="link.set(linkInput.value)"
+        />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="saving()" (click)="save()">Save</button>
+    </div>
+  </div>
+</div>

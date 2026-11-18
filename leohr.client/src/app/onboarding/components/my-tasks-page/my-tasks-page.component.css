@@ -1,0 +1,264 @@
+.emp-table-wrap {
+  background: var(--surface);
+  border: 0.5px solid var(--border-card);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.emp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.emp-table thead th {
+  padding: 10px 16px;
+  text-align: left;
+  color: var(--header-label);
+  font-weight: 400;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 0.5px solid var(--border-card);
+}
+
+.emp-table thead th:last-child {
+  padding-right: 40px;
+}
+
+.mt-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mt-admin-pill {
+  background: var(--surface-inverse);
+  color: var(--surface);
+}
+
+.mt-you {
+  padding: 3px 7px;
+  background: var(--brand-tint);
+  color: var(--success-ink);
+}
+
+.mt-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding-left: 12px;
+  border-left: 3px solid var(--brand-end);
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.mt-tabs {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.mt-tab {
+  margin-bottom: -1px;
+  padding: 8px 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.mt-tab:hover:not(.mt-tab--active) {
+  color: var(--ink);
+}
+
+.mt-tab--active {
+  border-bottom-color: var(--surface-inverse);
+  color: var(--surface-inverse);
+  font-weight: 600;
+}
+
+.mt-group {
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: minmax(800px, 1fr);
+}
+
+.mt-scope {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 0.5px solid var(--border-card);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+}
+
+.mt-scope-option {
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.mt-scope-option:hover:not(.mt-scope-option--active) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.mt-scope-option--active {
+  background: var(--surface-inverse);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.mt-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--surface-inverse);
+}
+
+.mt-group-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.mt-group-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surface);
+}
+
+.mt-group-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.mt-group-meta {
+  font-size: 13px;
+  color: var(--neutral-bg);
+}
+
+.mt-group-counts {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.mt-check-col {
+  width: 48px;
+}
+
+.mt-task-title {
+  font-weight: 600;
+}
+
+.mt-row--overdue {
+  background: var(--danger-bg);
+}
+
+.mt-row--mine {
+  box-shadow: inset 3px 0 0 var(--brand-end);
+}
+
+.mt-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.mt-due {
+  font-weight: 600;
+}
+
+.mt-due--overdue {
+  color: var(--danger-ink);
+}
+
+.mt-due--today {
+  color: var(--warning-ink);
+}
+
+.mt-assignee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mt-assignee-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* Fixed widths keep the columns aligned across hire groups, which are separate tables. */
+.mt-group .emp-table {
+  table-layout: fixed;
+}
+
+.mt-group .emp-table thead th {
+  background: var(--bg-input);
+  font-weight: 600;
+}
+
+.mt-col-assignee {
+  width: 24%;
+}
+
+.mt-col-phase {
+  width: 14%;
+}
+
+.mt-col-due {
+  width: 15%;
+}
+
+.emp-table .mt-status-col {
+  width: 130px;
+  text-align: right;
+}
+
+.mt-list {
+  transition: opacity 0.15s;
+}
+
+.mt-list--refreshing {
+  opacity: 0.6;
+}

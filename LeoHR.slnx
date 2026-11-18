@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="leohr.client/leohr.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="LeoHR.Server.IntegrationTests/LeoHR.Server.IntegrationTests.csproj" />
+  <Project Path="LeoHR.Server/LeoHR.Server.csproj" />
+</Solution>

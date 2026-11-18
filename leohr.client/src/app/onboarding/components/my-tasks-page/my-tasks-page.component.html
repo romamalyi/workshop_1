@@ -1,0 +1,194 @@
+<div class="ob-content">
+  <div class="page-header">
+    <div class="page-header__text">
+      <div class="mt-title-row">
+        <h1 class="page-title">{{ canWriteOnboarding() ? 'Tasks' : 'My Tasks' }}</h1>
+        @if (canWriteOnboarding()) {
+          <span class="ob-attention mt-admin-pill">Admin view</span>
+        }
+      </div>
+      @if (subtitle() && !loadFailed()) {
+        <p class="page-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    @if (canWriteOnboarding() && !loadFailed()) {
+      <div class="mt-scope" role="group" aria-label="Whose tasks">
+        @for (option of scopes(); track option.key) {
+          <button
+            type="button"
+            class="mt-scope-option"
+            [class.mt-scope-option--active]="scope() === option.key"
+            [attr.aria-pressed]="scope() === option.key"
+            (click)="setScope(option.key)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!loadFailed()) {
+    @if (showsAllTasks()) {
+      <p class="mt-legend">
+        <span class="ob-attention mt-you">You</span>
+        Tasks assigned to you. Everything else belongs to other owners and is shown because you are an admin.
+      </p>
+    }
+
+    <div class="emp-filter-bar">
+      <div class="emp-search-wrap">
+        <svg class="emp-search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="#9a9a9a" stroke-width="1.6" />
+          <path d="M13 13l3.5 3.5" stroke="#9a9a9a" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <input
+          class="input input--sm emp-search-input"
+          placeholder="Search tasks or people..."
+          aria-label="Search by task, assignee or new hire"
+          autocomplete="off"
+          [value]="searchTerm()"
+          (input)="onSearchChange($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="mt-tabs" role="group" aria-label="Task status">
+      @for (option of filters; track option.key) {
+        <button
+          type="button"
+          class="mt-tab"
+          [class.mt-tab--active]="filter() === option.key"
+          [attr.aria-pressed]="filter() === option.key"
+          (click)="setFilter(option.key)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (loading() && !loaded()) {
+    <p class="loading-text" role="status">Loading tasks...</p>
+  } @else if (loadFailed()) {
+    <div
+      class="mx-auto mt-12 flex max-w-[520px] flex-col items-center gap-2 rounded-xl border-[0.5px] border-(--border-card) bg-(--surface) p-8 text-center shadow-(--shadow-card)"
+    >
+      <h2 class="text-lg font-bold text-(--ink)">Your tasks couldn't be loaded</h2>
+      <p class="mb-3 text-sm text-(--ink-secondary)">Try again in a moment.</p>
+      <button type="button" class="btn btn--secondary" (click)="load()">Try again</button>
+    </div>
+  } @else {
+    <div class="mt-list" [class.mt-list--refreshing]="loading()" [attr.aria-busy]="loading()">
+      @for (group of groups(); track group.flowId) {
+        <section class="emp-table-wrap mt-group" [attr.aria-label]="group.name">
+          <div class="mt-group-head">
+            <div class="mt-group-title">
+              <span class="mt-group-avatar" aria-hidden="true">{{ initials(group.name) }}</span>
+              <span class="mt-group-name">{{ group.name }}</span>
+              <span class="mt-group-meta">{{ group.meta }}</span>
+            </div>
+            <span class="mt-group-counts">{{ group.counts }}</span>
+          </div>
+          <table class="emp-table">
+            <thead>
+              <tr>
+                <th class="mt-check-col"></th>
+                <th>Task</th>
+                @if (showsAllTasks()) {
+                  <th class="mt-col-assignee">Assignee</th>
+                }
+                <th class="mt-col-phase">Phase</th>
+                <th class="mt-col-due">Due</th>
+                <th class="mt-status-col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of group.rows; track row.id) {
+                <tr
+                  class="ob-task-row"
+                  [class.mt-row--overdue]="row.status === Status.Overdue"
+                  [class.mt-row--mine]="showsAllTasks() && row.isAssignedToMe"
+                >
+                  <td class="mt-check-col">
+                    <app-task-check
+                      [taskId]="row.id"
+                      [title]="row.title"
+                      [status]="row.status"
+                      [isStarted]="row.isStarted"
+                      [assigneeId]="row.assigneeId"
+                      [hasFields]="row.fieldLabels.length > 0"
+                      (open)="openTask(row)"
+                      (completed)="markDone(row)"
+                    ></app-task-check>
+                  </td>
+                  <td>
+                    <a
+                      class="ob-cell-primary mt-task-title ob-task-link"
+                      [routerLink]="['/onboarding/tasks', row.id]"
+                      [state]="taskState()"
+                      >{{ row.title }}</a
+                    >
+                    <div class="ob-cell-sub">{{ row.detail }}</div>
+                  </td>
+                  @if (showsAllTasks()) {
+                    <td>
+                      @if (row.assigneeName ?? row.assigneeId; as assignee) {
+                        <div class="mt-assignee">
+                          <app-avatar
+                            class="mt-avatar"
+                            [initials]="initials(assignee)"
+                            [color]="row.isAssignedToMe ? 'var(--brand-tint)' : 'var(--surface-subtle)'"
+                            [size]="36"
+                          ></app-avatar>
+                          <div>
+                            <div class="mt-assignee-name">
+                              {{ assignee }}
+                              @if (row.isAssignedToMe) {
+                                <span class="ob-attention mt-you">You</span>
+                              }
+                            </div>
+                            @if (row.responsibleRoleName) {
+                              <div class="ob-cell-sub">{{ row.responsibleRoleName }}</div>
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <span class="ob-cell-sub">Unassigned</span>
+                      }
+                    </td>
+                  }
+                  <td>{{ phaseLabels[row.phase] }}</td>
+                  <td>
+                    <div
+                      class="ob-cell-primary mt-due"
+                      [class.mt-due--overdue]="row.status === Status.Overdue"
+                      [class.mt-due--today]="row.isDueToday"
+                    >
+                      {{ row.dueDate | date: 'EEE d MMM' }}
+                    </div>
+                    @if (row.dueLabel) {
+                      <div class="ob-cell-sub">{{ row.dueLabel }}</div>
+                    }
+                  </td>
+                  <td class="mt-status-col">
+                    <span class="ob-attention" [class]="statusClasses[row.status]">{{ statusLabels[row.status] }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      } @empty {
+        <div class="emp-table-wrap">
+          <p class="emp-table-empty">{{ emptyMessage() }}</p>
+        </div>
+      }
+    </div>
+    @if (loadingMore()) {
+      <p class="loading-text" role="status">Loading more tasks...</p>
+    } @else {
+      <div aria-hidden="true" (appInView)="loadMore()"></div>
+    }
+  }
+</div>

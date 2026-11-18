@@ -1,0 +1,64 @@
+<div class="flex items-center gap-3.5">
+  @if (readOnly()) {
+    <span class="text-base text-(--ink)">{{ shownLabel() || emptyText() }}</span>
+  } @else {
+    <div class="relative min-w-0 flex-1" cdkOverlayOrigin #origin="cdkOverlayOrigin">
+      <input
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        [class.input]="!bare()"
+        [class.input--sm]="compact() && !bare()"
+        [class.search-select__bare]="bare()"
+        [id]="inputId()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [attr.aria-label]="inputId() ? null : label()"
+        [attr.aria-expanded]="open()"
+        [attr.aria-controls]="listId"
+        aria-autocomplete="list"
+        [value]="open() ? query() : shownLabel()"
+        (focus)="openList()"
+        (click)="open() || openList()"
+        (blur)="onBlur()"
+        #box
+        (input)="onInput(box.value)"
+        (keydown)="onKeydown($event)"
+      />
+      <!-- In an overlay, so a container with overflow: hidden does not clip the list. -->
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="origin"
+        [cdkConnectedOverlayOpen]="open()"
+        [cdkConnectedOverlayPositions]="listPositions"
+        [cdkConnectedOverlayWidth]="listWidth()"
+        [cdkConnectedOverlayFlexibleDimensions]="true"
+        [cdkConnectedOverlayViewportMargin]="8"
+      >
+        <ul role="listbox" [id]="listId" class="search-select__list">
+          @for (option of filtered(); track option.id; let i = $index) {
+            <li
+              role="option"
+              tabindex="-1"
+              class="search-select__option"
+              [class.search-select__option--active]="i === activeIndex()"
+              [class.search-select__option--selected]="option.id === selectedId()"
+              [attr.aria-selected]="option.id === selectedId()"
+              (mousedown)="$event.preventDefault(); pick(option)"
+            >
+              <span>{{ option.label }}</span>
+              @if (option.hint) {
+                <span class="search-select__hint">{{ option.hint }}</span>
+              }
+            </li>
+          } @empty {
+            <li class="search-select__empty">No matches</li>
+          }
+        </ul>
+      </ng-template>
+    </div>
+    @if (selectedId() && clearable()) {
+      <button type="button" class="btn btn--secondary btn--sm" (click)="clear()">Clear</button>
+    }
+  }
+</div>

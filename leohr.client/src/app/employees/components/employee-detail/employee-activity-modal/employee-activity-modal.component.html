@@ -1,0 +1,84 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancelled.emit()">
+  <div class="modal-box modal-box--wide modal-box--overflow-visible">
+    <h2 class="modal-title">{{ title }}</h2>
+
+    <!-- Activity picker (hidden in edit mode) -->
+    @if (!isEditMode) {
+      <div class="form-field">
+        <label>Activity</label>
+        <input class="input input--sm" [(ngModel)]="search" placeholder="Search activities…" autocomplete="off" />
+      </div>
+
+      @if (form.activityId) {
+        <div class="ea-selected-activity">
+          Selected: <strong>{{ selectedActivityName() }}</strong>
+          <button class="ea-clear-btn" (click)="selectActivity(0)">Change</button>
+        </div>
+      }
+
+      @if (!form.activityId) {
+        <div class="ea-catalog-list">
+          @for (group of groupedActivities; track group.category) {
+            <div class="ea-catalog-group-label">{{ group.label }}</div>
+            @for (a of group.items; track a.id) {
+              <button
+                class="ea-catalog-row"
+                [class.ea-catalog-row--disabled]="!!a.usedIn"
+                [disabled]="!!a.usedIn"
+                [tooltip]="usageLabel(a)"
+                (click)="selectActivity(a.id)"
+              >
+                <span class="ea-catalog-name">{{ a.name }}</span>
+                @if (a.usedIn) {
+                  <span class="ea-catalog-used">{{ usageLabel(a) }}</span>
+                } @else {
+                  <span class="ea-catalog-meta">{{ a.withinPeriod | periodLabel }} · {{ a.points }} pts</span>
+                }
+              </button>
+            }
+          } @empty {
+            <p class="emp-td-muted">No activities match your search.</p>
+          }
+        </div>
+      }
+    }
+
+    <!-- Date -->
+    <div class="form-field">
+      <label>
+        Date accomplished
+        @if (!isEditMode) {
+          <span class="field-required">*</span>
+        }
+      </label>
+      <app-date-picker [(value)]="form.accomplishedOn" [disableFuture]="recordsPastWork" />
+
+      @if (isFutureDateInvalid) {
+        <span class="field-error">Date accomplished cannot be in the future.</span>
+      }
+    </div>
+
+    <!-- Note -->
+    <div class="form-field">
+      <label>Note <span class="field-optional">(optional)</span></label>
+      <textarea class="input" [(ngModel)]="form.note" maxlength="500" rows="3" placeholder="Any context…"></textarea>
+    </div>
+
+    <!-- Status selector for admin mode only -->
+    @if (isAdminMode) {
+      <div class="form-field">
+        <label>Status</label>
+        <select class="input" [(ngModel)]="form.status">
+          @for (status of adminStatuses; track status) {
+            <option [value]="status">{{ statusLabel(status) }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancelled.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!isValid()" (click)="submit()">Save</button>
+    </div>
+  </div>
+</div>

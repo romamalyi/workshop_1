@@ -1,0 +1,275 @@
+<!-- TODO(IPR-4153): move the activity rows to the data-table pattern, with labelled row actions, when the Employee detail is redesigned. -->
+<div class="ea-tab">
+  @if (initialLoading()) {
+    <p class="loading-text">Loading…</p>
+  } @else {
+    <!-- Header row -->
+    <div class="ea-header">
+      <div
+        class="ea-points-chip"
+        title="Sum of points from approved point-earning activities. Activities marked 'Required' are prerequisites that award no points."
+      >
+        {{ totalApprovedPoints() }} pts approved
+      </div>
+      <div class="ea-header-actions">
+        @if (canWriteManage()) {
+          <button class="btn btn--primary btn--sm" (click)="openAdminModal()">+ Add activity</button>
+        } @else if (isOwnProfile()) {
+          <button class="btn btn--primary btn--sm" (click)="openReportModal()">+ Report activity</button>
+        }
+      </div>
+    </div>
+
+    <!-- Pending panel -->
+    <div class="ea-panel">
+      <div class="ea-panel-title">
+        <span class="ea-panel-name">Pending</span>
+        <span class="ea-panel-count"
+          >{{ pending().length }} {{ pending().length === 1 ? 'activity' : 'activities' }}</span
+        >
+      </div>
+
+      @if (pending().length) {
+        @for (a of pending(); track a.id) {
+          <div class="ea-row ea-row--table">
+            <div class="ea-row-info">
+              <div class="ea-info-tags">
+                <span
+                  class="chip"
+                  [style.background]="categoryBackground(catalogActivity(a.activityId)?.category ?? '')"
+                  >{{ catalogActivity(a.activityId)?.category ?? '' | categoryLabel }}</span
+                >
+                @if (a.createdById) {
+                  <span class="ea-meta-item">Added by {{ a.createdByName ?? a.createdById }}</span>
+                }
+              </div>
+              <div class="ea-info-main">
+                <span class="ea-activity-name">{{ catalogActivity(a.activityId)?.name ?? '' }}</span>
+                @if (a.promotionInfo) {
+                  <span class="ea-meta-item ea-meta-item--promotion"
+                    >Used for: {{ a.promotionInfo.fromRole }} → {{ a.promotionInfo.toRole }}</span
+                  >
+                }
+                @if (a.note) {
+                  <div class="ea-note">{{ a.note }}</div>
+                }
+              </div>
+            </div>
+
+            <div class="ea-col ea-col--date">
+              @if (a.accomplishedOn) {
+                <span class="ea-date">{{ a.accomplishedOn | date: 'MMM d, yyyy' }}</span>
+              } @else {
+                <span class="ea-date ea-date--empty">—</span>
+              }
+            </div>
+
+            <div class="ea-col ea-col--status">
+              <span class="badge badge--{{ statusModifier(a.status) }}">{{ statusLabel(a.status) }}</span>
+            </div>
+
+            <div class="ea-col ea-col--points">
+              <span class="badge badge--success">{{ a.points ?? 0 }} pts</span>
+            </div>
+
+            <div class="ea-col ea-col--actions">
+              @if (canWriteManage()) {
+                @if (a.status !== EmployeeActivityStatus.Planned) {
+                  <button class="btn btn--secondary btn--sm" (click)="approvingActivity.set(a)">Approve</button>
+                }
+                <button class="btn btn--secondary btn--sm" (click)="openEditModal(a)">Edit</button>
+                <button
+                  class="btn btn--danger btn--sm btn--icon"
+                  tooltip="Delete"
+                  aria-label="Delete"
+                  (click)="confirmDelete(a.id)"
+                >
+                  <app-action-icon name="trash" />
+                </button>
+              } @else if (isOwnProfile()) {
+                @if (a.status === EmployeeActivityStatus.Planned) {
+                  <button class="btn btn--secondary btn--sm" (click)="openSelfReportPrompt(a.id)">
+                    Mark as reported
+                  </button>
+                }
+                @if (a.status === EmployeeActivityStatus.SelfReported) {
+                  <button class="btn btn--secondary btn--sm" (click)="openEditModal(a)">Edit</button>
+                }
+                @if (canDelete(a)) {
+                  <button
+                    class="btn btn--danger btn--sm btn--icon"
+                    tooltip="Delete"
+                    aria-label="Delete"
+                    (click)="confirmDelete(a.id)"
+                  >
+                    <app-action-icon name="trash" />
+                  </button>
+                }
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <p class="emp-td-muted">No pending activities.</p>
+      }
+    </div>
+
+    <!-- Approved panel -->
+    <div class="ea-panel">
+      <div class="ea-panel-title">
+        <span class="ea-panel-name">Approved</span>
+        <span class="ea-panel-count"
+          >{{ approved().length }} {{ approved().length === 1 ? 'activity' : 'activities' }}</span
+        >
+      </div>
+
+      @if (approved().length) {
+        @for (a of approved(); track a.id) {
+          <div class="ea-row ea-row--table ea-row--expiry">
+            <div class="ea-row-info">
+              <div class="ea-info-tags">
+                <span
+                  class="chip"
+                  [style.background]="categoryBackground(catalogActivity(a.activityId)?.category ?? '')"
+                  >{{ catalogActivity(a.activityId)?.category ?? '' | categoryLabel }}</span
+                >
+                @if (a.approvedByName || a.approvedById) {
+                  <span class="ea-meta-item" [tooltip]="a.approvedAt | date: 'MMM d, yyyy'"
+                    >Approved by {{ a.approvedByName ?? a.approvedById }}</span
+                  >
+                }
+              </div>
+              <div class="ea-info-main">
+                <span class="ea-activity-name">{{ catalogActivity(a.activityId)?.name ?? '' }}</span>
+                @if (a.promotionInfo) {
+                  <span class="ea-meta-item ea-meta-item--promotion"
+                    >Used for: {{ a.promotionInfo.fromRole }} → {{ a.promotionInfo.toRole }}</span
+                  >
+                }
+                @if (a.note) {
+                  <div class="ea-note">{{ a.note }}</div>
+                }
+              </div>
+            </div>
+
+            <div class="ea-col ea-col--date">
+              @if (a.accomplishedOn) {
+                <span class="ea-date">{{ a.accomplishedOn | date: 'MMM d, yyyy' }}</span>
+              } @else {
+                <span class="ea-date ea-date--empty">—</span>
+              }
+            </div>
+
+            <div class="ea-col ea-col--expiry">
+              @if (a.expiresOn) {
+                <span class="ea-date ea-date--expires">Expires: {{ a.expiresOn | date: 'MMM d, yyyy' }}</span>
+              } @else if (a.expiryKind === 'lifetime') {
+                <span class="ea-date ea-date--lifetime">Never expires</span>
+              } @else if (a.expiryKind === 'in-level') {
+                <span class="ea-date ea-date--level">Until level change</span>
+              } @else {
+                <span class="ea-date ea-date--empty">—</span>
+              }
+            </div>
+
+            <div class="ea-col ea-col--status">
+              <span class="badge badge--{{ statusModifier(a.status) }}">{{ statusLabel(a.status) }}</span>
+            </div>
+
+            <div class="ea-col ea-col--points">
+              <span class="badge badge--success">{{ a.pointsSnapshot ?? 0 }} pts</span>
+            </div>
+
+            <div class="ea-col ea-col--actions">
+              @if (canWriteManage()) {
+                <button class="btn btn--secondary btn--sm" (click)="openEditModal(a)">Edit</button>
+                <button
+                  class="btn btn--danger btn--sm btn--icon"
+                  tooltip="Delete"
+                  aria-label="Delete"
+                  (click)="confirmDelete(a.id)"
+                >
+                  <app-action-icon name="trash" />
+                </button>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <p class="emp-td-muted">No approved activities yet.</p>
+      }
+    </div>
+  }
+
+  <!-- Self-report inline prompt -->
+  @if (selfReportPromptId() !== null) {
+    <div class="modal-backdrop" appDialog (dialogClose)="closeSelfReportPrompt()">
+      <div class="modal-box modal-box--overflow-visible">
+        <h2 class="modal-title">Mark as Reported</h2>
+        <div class="form-field">
+          <label>Date accomplished <span class="field-required">*</span></label>
+          <app-date-picker
+            disableFuture
+            [value]="selfReportForm().accomplishedOn"
+            (valueChange)="selfReportForm.update((f) => ({ ...f, accomplishedOn: $event }))"
+          />
+          @if (isFutureSelfReportDate()) {
+            <span class="field-error">Date accomplished cannot be in the future.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label>Note <span class="field-optional">(optional)</span></label>
+          <textarea
+            class="input"
+            rows="3"
+            maxlength="500"
+            [ngModel]="selfReportForm().note"
+            (ngModelChange)="selfReportForm.update((f) => ({ ...f, note: $event }))"
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn--secondary" (click)="closeSelfReportPrompt()">Cancel</button>
+          <button
+            class="btn btn--primary"
+            [disabled]="!selfReportForm().accomplishedOn || isFutureSelfReportDate()"
+            (click)="submitSelfReport()"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete confirm dialog -->
+  @if (approvingActivity(); as approving) {
+    <app-approve-activity-dialog
+      [activityName]="catalogActivity(approving.activityId)?.name ?? ''"
+      [accomplishedOn]="approving.accomplishedOn ?? null"
+      [note]="approving.note ?? null"
+      (confirm)="approve(approving.id, $event)"
+      (cancel)="approvingActivity.set(null)"
+    />
+  }
+
+  @if (confirmDeleteId() !== null) {
+    <app-confirm-dialog
+      title="Delete Activity"
+      message="This will remove the activity from the list. This action cannot be undone."
+      confirmLabel="Delete"
+      (confirm)="deleteActivity()"
+      (dismissed)="cancelDelete()"
+    />
+  }
+
+  <!-- Add / Edit modal -->
+  @if (modalOpen()) {
+    <app-employee-activity-modal
+      [mode]="modalMode()"
+      [activity]="editingActivity()"
+      [catalogActivities]="modalMode() === 'edit' ? editCatalog() : modalCatalog()"
+      (save)="onModalSave($event)"
+      (cancelled)="closeModal()"
+    />
+  }
+</div>

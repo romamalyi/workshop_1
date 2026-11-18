@@ -1,0 +1,121 @@
+<section class="detail-card" aria-labelledby="activities-title">
+  <div class="activities-header">
+    <div class="activities-totals">
+      <h2 id="activities-title" class="detail-card__title">Activities</h2>
+      <span class="activities-pts">
+        {{ pointsAchieved() }}
+        <span class="activities-pts-required">/ {{ pointsRequired() != null ? pointsRequired() : '?' }} pts</span>
+      </span>
+      <span class="activities-counts">
+        {{ earnedActivities().length + carriedActivities().length }} approved
+        @if (carriedActivities().length > 0) {
+          · {{ carriedPoints() }} pts carried over
+        }
+        @if (plannedActivities().length > 0) {
+          · {{ plannedActivities().length }} planned
+        }
+        @if (selfReportedActivities().length > 0) {
+          · {{ selfReportedActivities().length }} pending
+        }
+      </span>
+      @if (pointsPlanned() > 0) {
+        <span class="activities-pts-planned">+{{ pointsPlanned() }} pts if completed</span>
+      }
+    </div>
+    @if (canEditActivities()) {
+      <button class="btn btn--primary" (click)="openPicker()">Plan activity</button>
+    }
+  </div>
+
+  <app-progress-bar
+    label="Activity points"
+    [value]="pointsAchieved()"
+    [planned]="pointsPlanned()"
+    [max]="pointsRequired() ?? pointsAchieved() + pointsPlanned()"
+  ></app-progress-bar>
+
+  @if (!hasActivities()) {
+    <p class="activities-empty">No activities yet. Plan one to start collecting points.</p>
+  }
+
+  <div class="activities-groups">
+    <app-activity-list
+      title="Carried over from previous promotion"
+      [activities]="carriedActivities()"
+      [listType]="ActivityListType.Carried"
+    >
+    </app-activity-list>
+
+    <app-activity-list
+      title="Approved"
+      [activities]="earnedActivities()"
+      [listType]="ActivityListType.Approved"
+      [canRevertFn]="canRevert.bind(this)"
+      (revert)="revertApproval.emit($event)"
+    >
+    </app-activity-list>
+
+    <app-activity-list
+      title="Planned"
+      [activities]="plannedActivities()"
+      [listType]="ActivityListType.Planned"
+      [canRemoveFn]="canRemove.bind(this)"
+      [canReportFn]="canReport.bind(this)"
+      (approve)="approveActivity.emit({ employeeId: employeeId(), employeeActivityId: $event })"
+      (markReported)="openReportPrompt($event)"
+      (remove)="removeActivity.emit($event)"
+    >
+    </app-activity-list>
+
+    <app-activity-list
+      title="Pending approval"
+      [activities]="selfReportedActivities()"
+      [listType]="ActivityListType.Pending"
+      [canApproveFn]="canApprove.bind(this)"
+      (approve)="approveActivity.emit({ employeeId: employeeId(), employeeActivityId: $event })"
+    >
+    </app-activity-list>
+  </div>
+</section>
+
+@if (reportPromptId() !== null) {
+  <div class="modal-backdrop" appDialog (dialogClose)="closeReportPrompt()">
+    <div class="modal-box modal-box--overflow-visible">
+      <div class="modal-header">
+        <div class="modal-title">Mark as done</div>
+      </div>
+      <div class="form-field">
+        <div class="modal-label">Date accomplished *</div>
+        <app-date-picker
+          disableFuture
+          [value]="reportForm().accomplishedOn"
+          (valueChange)="reportForm.update((f) => ({ ...f, accomplishedOn: $event }))"
+        />
+      </div>
+      <div class="form-field">
+        <div class="modal-label">Note <span class="modal-optional">(optional)</span></div>
+        <textarea
+          class="input"
+          rows="3"
+          maxlength="500"
+          [ngModel]="reportForm().note"
+          (ngModelChange)="reportForm.update((f) => ({ ...f, note: $event }))"
+        ></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--secondary" (click)="closeReportPrompt()">Cancel</button>
+        <button class="btn btn--primary" [disabled]="!reportForm().accomplishedOn" (click)="submitReport()">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showPicker$ | async) {
+  <app-activity-picker-modal
+    [promotion]="promotion()"
+    (selected)="planActivity.emit($event); closePicker()"
+    (cancelled)="closePicker()"
+  ></app-activity-picker-modal>
+}

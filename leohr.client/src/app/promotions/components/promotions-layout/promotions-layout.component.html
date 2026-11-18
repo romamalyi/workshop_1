@@ -1,0 +1,4 @@
+<router-outlet />
+@if (showCelebration()) {
+  <app-celebration-video (closed)="showCelebration.set(false)" />
+}

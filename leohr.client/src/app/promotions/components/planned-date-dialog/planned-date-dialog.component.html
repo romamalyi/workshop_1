@@ -1,0 +1,23 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancel.emit()">
+  <div class="modal-box modal-box--sm modal-box--overflow-visible">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit planned date</h2>
+      @if (activityName()) {
+        <p class="modal-activity">{{ activityName() }}</p>
+      }
+    </div>
+    <div class="form-field">
+      <label>Planned on <span class="field-required">*</span></label>
+      <app-date-picker disableFuture [value]="date()" (valueChange)="date.set($event)" />
+      @if (isFutureDate()) {
+        <span class="field-error">Planned date cannot be in the future.</span>
+      }
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!date() || isFutureDate()" (click)="confirm.emit(date())">
+        Save
+      </button>
+    </div>
+  </div>
+</div>

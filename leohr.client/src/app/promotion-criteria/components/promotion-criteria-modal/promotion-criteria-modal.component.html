@@ -1,0 +1,128 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancel.emit()">
+  <div class="modal-box modal-box--wide">
+    <h2 class="modal-title">{{ criteria() ? 'Edit Criteria' : 'New Criteria' }}</h2>
+
+    @if (duplicateError()) {
+      <div class="pc-duplicate-error">A criteria for this level already exists on this technology.</div>
+    }
+
+    <div class="modal-scroll">
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label>Technology</label>
+          <select class="input" [ngModel]="form.technology" (ngModelChange)="onTechnologyChange($event)">
+            @for (t of technologies; track t) {
+              <option [value]="t">{{ t | technologyLabel }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>English Level</label>
+          <select class="input" [(ngModel)]="form.englishLevel">
+            @for (el of englishLevels; track el) {
+              <option [value]="el">{{ englishLevelLabel(el) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Seniority</label>
+          <select class="input" [(ngModel)]="form.seniority">
+            @for (s of seniorities; track s) {
+              <option [value]="s">{{ seniorityLabel(s) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Sub-level</label>
+          <select class="input" [(ngModel)]="form.subLevel">
+            @for (sl of subLevels; track sl) {
+              <option [value]="sl">{{ subLevelLabel(sl) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Work Experience (months from)</label>
+          <input
+            class="input"
+            type="number"
+            [(ngModel)]="form.workExperienceFromMonths"
+            min="0"
+            max="600"
+            placeholder="e.g. 12"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>Work Experience (months to)</label>
+          <input
+            class="input"
+            type="number"
+            [(ngModel)]="form.workExperienceToMonths"
+            min="0"
+            max="600"
+            placeholder="e.g. 18"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>KE Required</label>
+          <select class="input" [(ngModel)]="form.keRequired">
+            @for (ke of keRequirements; track ke) {
+              <option [value]="ke">{{ keRequirementLabel(ke) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Required Experience</label>
+          <input
+            class="input"
+            [(ngModel)]="form.requiredExperience"
+            maxlength="300"
+            placeholder="e.g. 6m front, 6m back"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>Activities Score</label>
+          <input class="input" type="number" [(ngModel)]="form.activitiesScore" min="0" placeholder="e.g. 50" />
+        </div>
+
+        <div class="form-field modal-grid-2__span">
+          <label>Required Achievement</label>
+          <select class="input" [(ngModel)]="form.requiredActivityId">
+            <option [ngValue]="null">None</option>
+            @for (a of eligibleActivities(); track a.id) {
+              <option [ngValue]="a.id">{{ a.name }}</option>
+            }
+          </select>
+        </div>
+
+        @if (criteria()) {
+          <div class="form-field preserve-history-field modal-grid-2__span">
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="preserveHistory" />
+              <span>Preserve history</span>
+            </label>
+            <p class="helper-text">
+              @if (preserveHistory) {
+                On: create a new version, keep old records as-is.
+              } @else {
+                Off: update this row in place — old records will show the new values.
+              }
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!isValid()" (click)="submit()">Save</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,185 @@
+@let roles = effectiveRoles();
+@let isLoading = rolesResource.isLoading();
+@let error = rolesResource.error();
+@let dirty = isDirty();
+
+<div class="ob-content">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Onboarding settings</h1>
+      <p class="page-subtitle">Defaults used when a flow is generated.</p>
+    </div>
+  </header>
+
+  <nav class="os-tabs" aria-label="Settings sections">
+    <button
+      type="button"
+      class="os-tab"
+      [class.os-tab--active]="section() === 'roles'"
+      [attr.aria-current]="section() === 'roles' ? 'page' : null"
+      (click)="section.set('roles')"
+    >
+      Responsible Roles
+    </button>
+    <button
+      type="button"
+      class="os-tab"
+      [class.os-tab--active]="section() === 'reminders'"
+      [attr.aria-current]="section() === 'reminders' ? 'page' : null"
+      (click)="section.set('reminders')"
+    >
+      Reminders
+    </button>
+    <button
+      type="button"
+      class="os-tab"
+      [class.os-tab--active]="section() === 'phases'"
+      [attr.aria-current]="section() === 'phases' ? 'page' : null"
+      (click)="section.set('phases')"
+    >
+      Phases
+    </button>
+  </nav>
+
+  <!-- [hidden], not @switch: every section stays mounted so its unsaved edits survive a tab switch. -->
+  <div [hidden]="section() !== 'roles'">
+    @if (isLoading) {
+      <p class="loading-text" role="status">Loading responsible roles...</p>
+    }
+
+    @if (error) {
+      <p class="error-text" role="alert">Failed to load responsible roles settings.</p>
+    }
+
+    @if (!isLoading && !error) {
+      <div class="os-layout">
+        <div>
+          <section class="os-card" aria-labelledby="roles-heading">
+            <header class="os-card-header">
+              <h2 id="roles-heading" class="os-card-title">Responsible Roles</h2>
+              <p class="os-card-desc">
+                Each role has one default person. Templates assigned to a role resolve to that person when a flow is
+                generated. Candidates are limited to directory people holding the title.
+              </p>
+            </header>
+
+            <div class="os-table" role="table" aria-label="Responsible Role Mappings">
+              <div class="os-th-row" role="row">
+                <span class="os-th" role="columnheader">Role</span>
+                <div class="os-role-actions">
+                  <span class="os-th" role="columnheader">Default person</span>
+                </div>
+              </div>
+
+              @for (role of roles; track role.roleKey) {
+                <div class="os-tr-row" role="row">
+                  <div class="os-role-info" role="cell">
+                    <span class="os-role-name"
+                      >{{ role.roleName }}
+                      @if (role.defaultInactive) {
+                        <span class="os-inactive-badge">Default person no longer active</span>
+                      }
+                    </span>
+                    <span class="os-role-hint">
+                      {{ role.candidatesCount }} {{ role.candidatesCount === 1 ? 'person holds' : 'people hold' }} this
+                      title
+                    </span>
+                  </div>
+
+                  <div
+                    class="os-role-actions"
+                    role="cell"
+                    [tooltip]="canEditRole(role.roleKey) ? null : 'Only admins can change this'"
+                  >
+                    <select
+                      class="os-select"
+                      [class.os-select--muted]="role.selectedEmployeeId === null"
+                      [attr.aria-label]="'Select default employee for ' + role.roleName"
+                      [ngModel]="role.selectedEmployeeId"
+                      [disabled]="!canEditRole(role.roleKey)"
+                      (ngModelChange)="onEmployeeChange(role.roleKey, $event)"
+                    >
+                      <option [ngValue]="null">Not set</option>
+                      @for (candidate of role.candidates; track candidate.id) {
+                        <option [ngValue]="candidate.id">{{ candidate.fullName }}</option>
+                      }
+                    </select>
+
+                    <button
+                      type="button"
+                      class="btn btn--secondary btn--sm"
+                      [attr.aria-label]="'Clear selected employee for ' + role.roleName"
+                      [disabled]="role.selectedEmployeeId === null || !canEditRole(role.roleKey)"
+                      (click)="clearRole(role.roleKey)"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <footer class="os-card-footer">
+              <div class="os-unsaved">
+                @if (dirty) {
+                  <span role="status">Unsaved changes</span>
+                }
+              </div>
+              <div class="os-footer-btns">
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  aria-label="Reset changes"
+                  [disabled]="!dirty"
+                  (click)="reset()"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  aria-label="Save changes"
+                  [disabled]="!dirty"
+                  (click)="save()"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </footer>
+          </section>
+
+          @if (isOnboardingAdmin()) {
+            <app-onboarding-responsible-positions-settings />
+          }
+        </div>
+
+        <aside class="os-help-column" aria-label="Informational help cards">
+          <article class="os-help-card">
+            <span class="os-help-label">How it resolves</span>
+            <p class="os-help-text">
+              A template stores a role, not a person. At generation the role is swapped for its default. If a role has
+              no default, the task is created unassigned and shows up in the flow as needing an owner.
+            </p>
+          </article>
+
+          <article class="os-help-card">
+            <span class="os-help-label">Role list</span>
+            <p class="os-help-text">
+              Templates can also be assigned to the new hire, who is the subject of the flow and needs no mapping.
+            </p>
+            <p class="os-help-text os-help-text--spaced">
+              Fixed at six for now. The list is data, the mapping is mechanism — making roles dynamic later changes only
+              where the list comes from.
+            </p>
+          </article>
+        </aside>
+      </div>
+    }
+  </div>
+  <div [hidden]="section() !== 'reminders'">
+    <app-onboarding-reminders-settings />
+  </div>
+  <div [hidden]="section() !== 'phases'">
+    <app-onboarding-phases-settings />
+  </div>
+</div>

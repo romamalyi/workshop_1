@@ -1,0 +1,261 @@
+<div class="ob-content">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">New Onboarding Flow</h1>
+    </div>
+  </header>
+
+  @if (loadingTemplates()) {
+    <p class="loading-text" role="status">Loading task templates...</p>
+  } @else {
+    <div class="ofw-layout">
+      <section class="os-card">
+        <div class="ofw-field-row">
+          <label class="ofw-field" [class.ofw-field--required]="!fullName().trim()">
+            <span>Full name</span>
+            <input
+              type="text"
+              [ngModel]="fullName()"
+              (ngModelChange)="fullName.set($event)"
+              (blur)="touch('name')"
+              placeholder="e.g. Andrii Shevchuk"
+            />
+          </label>
+          <label class="ofw-field">
+            <span>Position</span>
+            <input
+              type="text"
+              [ngModel]="position()"
+              (ngModelChange)="position.set($event)"
+              placeholder="e.g. .NET Developer"
+            />
+          </label>
+        </div>
+
+        <div class="ofw-field ofw-divider" [class.ofw-field--required]="typeId() === null">
+          <span>Onboarding type</span>
+          @if (typesLoading()) {
+            <p class="ofw-hint">Loading onboarding types...</p>
+          } @else if (typesFailed()) {
+            <p class="field-error">Could not load onboarding types.</p>
+          } @else if (activeTypes().length === 0) {
+            <div class="ofw-note">
+              <strong>No active onboarding types</strong>
+              A flow needs a type to be created. Add or restore one on the
+              <a class="underline" routerLink="/onboarding/types">Onboarding types</a> page.
+            </div>
+          } @else {
+            <select
+              class="os-select"
+              [class.os-select--muted]="typeId() === null"
+              [ngModel]="typeId()"
+              (ngModelChange)="selectType($event)"
+              (blur)="touch('type')"
+            >
+              <option [ngValue]="null">Select an onboarding type</option>
+              @for (type of activeTypes(); track type.id) {
+                <option [ngValue]="type.id">
+                  {{ type.name }} · {{ type.enabledTemplateCount }}
+                  {{ type.enabledTemplateCount === 1 ? 'task' : 'tasks' }}
+                </option>
+              }
+            </select>
+            @if (selectedType(); as type) {
+              <p class="ofw-hint">
+                @if (type.description) {
+                  {{ type.description }} ·
+                }
+                generates {{ type.enabledTemplateCount }} {{ type.enabledTemplateCount === 1 ? 'task' : 'tasks' }}
+              </p>
+            }
+          }
+        </div>
+
+        <div class="ofw-field-row ofw-divider">
+          @let responsible = selectedResponsible();
+          <div class="ofw-field" [class.ofw-field--required]="!responsible">
+            <span>Responsible person</span>
+            <app-search-select
+              label="Responsible person"
+              placeholder="Search person…"
+              [selectedId]="responsible?.id ?? null"
+              [selectedLabel]="responsible?.fullName ?? null"
+              [options]="responsibleOptions()"
+              [compact]="true"
+              [clearable]="false"
+              (picked)="responsiblePersonId.set($event?.id ?? null); touch('responsible')"
+              (blurred)="touch('responsible')"
+            ></app-search-select>
+            <p class="ofw-hint">
+              @if (responsible?.position; as role) {
+                Picks who answers for this onboarding as {{ role }}.
+              } @else {
+                Picks who answers for this onboarding.
+              }
+              The flow cannot be created without it.
+            </p>
+          </div>
+          <div class="ofw-note">
+            <strong>What they own</strong>
+            Every {{ responsible?.position ? responsible?.position + ' task' : 'task for their role' }} in the flow, any
+            template without a default assignee, and the probation summary.
+          </div>
+        </div>
+
+        <div class="ofw-divider">
+          <span class="os-help-label">Employment</span>
+          <div class="ofw-field-row">
+            <div class="ofw-field" role="group" aria-label="Employment type">
+              <span>Employment type</span>
+              <div class="ofw-toggle-group">
+                <button
+                  type="button"
+                  class="ofw-toggle"
+                  [class.ofw-toggle--active]="employmentType() === EmploymentType.FullTime"
+                  (click)="selectEmploymentType(EmploymentType.FullTime)"
+                >
+                  Full-time
+                </button>
+                <button
+                  type="button"
+                  class="ofw-toggle"
+                  [class.ofw-toggle--active]="employmentType() === EmploymentType.PartTime"
+                  (click)="selectEmploymentType(EmploymentType.PartTime)"
+                >
+                  Part-time
+                </button>
+              </div>
+            </div>
+            <label class="ofw-field" [class.ofw-field--required]="!startDate()">
+              <span>Start date</span>
+              <input
+                type="date"
+                [class.ofw-date-empty]="!startDate()"
+                [class.ofw-invalid]="startDateOutOfRange()"
+                [min]="startDateMin"
+                [max]="startDateMax"
+                [ngModel]="startDate()"
+                (ngModelChange)="startDate.set($event)"
+                (blur)="touch('startDate')"
+              />
+              @if (startDateOutOfRange()) {
+                <span class="field-error">Start date must be within one year of today.</span>
+              }
+            </label>
+          </div>
+        </div>
+
+        <div class="ofw-field-row">
+          <label class="ofw-field">
+            <span>Employee level</span>
+            <select
+              class="os-select"
+              [class.os-select--muted]="level() === null"
+              [ngModel]="level()"
+              (ngModelChange)="selectLevel($event)"
+            >
+              <option [ngValue]="null">Select a level</option>
+              @for (option of levelOptions; track option) {
+                <option [ngValue]="option">{{ levelLabels[option] }}</option>
+              }
+            </select>
+          </label>
+          @if (suggestedTemplates().length > 0) {
+            <div class="ofw-note ofw-note--success" role="status">
+              <strong>
+                {{ levelLabels[level()!] }} has {{ suggestedTemplates().length }} suggested template{{
+                  suggestedTemplates().length === 1 ? '' : 's'
+                }}
+              </strong>
+              {{ suggestedTitles() }} — pre-selected below. Turn off anything this hire does not need.
+            </div>
+          }
+        </div>
+
+        @if (activeOptional().length > 0) {
+          <div class="ofw-optional ofw-divider">
+            <span class="os-help-label">Optional templates</span>
+            <p class="ofw-hint">Marked Optional in the library. Not added to this flow unless selected.</p>
+
+            @for (template of activeOptional(); track template.id) {
+              <div class="ofw-optional-row" [class.ofw-optional-row--warning]="showOverrideWarning(template)">
+                <div class="ofw-optional-info">
+                  <span class="ofw-optional-title">
+                    {{ template.title }}
+                    @if (isSuggested(template)) {
+                      <span class="ofw-badge">SUGGESTED</span>
+                    }
+                  </span>
+                  @if (template.description) {
+                    <span class="ofw-optional-desc">{{ template.description }}</span>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="ofw-switch"
+                  [class.ofw-switch--on]="isTicked(template)"
+                  role="switch"
+                  [attr.aria-checked]="isTicked(template)"
+                  (click)="toggleOptional(template)"
+                >
+                  <span class="ofw-switch-knob"></span>
+                </button>
+              </div>
+              @if (showOverrideWarning(template)) {
+                <div class="ofw-override-warning" role="status">
+                  {{ template.title }} is suggested for {{ levelLabels[level()!] }} hires
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <footer class="os-card-footer">
+          <div class="ofw-required-hint">
+            @for (message of validationMessages(); track message) {
+              <div>{{ message }}</div>
+            }
+          </div>
+          <div class="os-footer-btns">
+            <button type="button" class="btn btn--secondary" (click)="cancel()">Cancel</button>
+            <button type="button" class="btn btn--primary" [disabled]="!canSubmit()" (click)="submit()">
+              {{ submitting() ? 'Creating...' : 'Create Flow' }}
+            </button>
+          </div>
+        </footer>
+      </section>
+
+      <aside class="ofw-preview os-card" aria-label="Generation preview">
+        <span class="os-help-label ofw-preview-header">Will be generated on create</span>
+        <div class="ofw-preview-total">
+          {{ totalTaskCount() }} <span>tasks across {{ phaseCounts().length }} phases</span>
+        </div>
+
+        @for (p of phaseCounts(); track p.phase) {
+          <div class="ofw-phase-row">
+            <div>
+              <span>{{ p.label }}</span>
+              <div class="ofw-phase-dates">{{ p.dates }}</div>
+            </div>
+            <span>{{ p.count }}</span>
+          </div>
+        }
+
+        <p class="ofw-hint ofw-preview-note">
+          Due dates are calculated from the start date or the end of probation, never landing on a weekend.
+        </p>
+      </aside>
+    </div>
+  }
+</div>
+
+@if (pendingSkip()) {
+  <app-confirm-dialog
+    title="Skip this task?"
+    [message]="'This task is normally required for ' + levelLabels[level()!] + ' hires. Skip it anyway?'"
+    confirmLabel="Skip task"
+    cancelLabel="Keep task"
+    (confirm)="confirmSkip()"
+    (dismissed)="keepTask()"
+  />
+}

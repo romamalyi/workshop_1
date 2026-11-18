@@ -1,0 +1,29 @@
+# Local development only. Do not use in production.
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: leohr-postgres
+    environment:
+      POSTGRES_USER: leohr
+      POSTGRES_PASSWORD: leohrpass
+      POSTGRES_DB: leohr
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: leohr-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

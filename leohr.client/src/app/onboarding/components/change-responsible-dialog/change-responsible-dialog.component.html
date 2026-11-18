@@ -1,0 +1,56 @@
+<div class="modal-backdrop" appDialog (dialogClose)="dismissed.emit()">
+  <div class="modal-box crd-box" role="dialog" aria-labelledby="crd-title">
+    <div>
+      <h2 id="crd-title" class="modal-title">Change responsible person</h2>
+      <p class="crd-subtitle">Only employees in allowed positions are listed.</p>
+    </div>
+
+    <div class="crd-group">
+      <span class="crd-label">Current</span>
+      <div class="crd-current">
+        <app-avatar [initials]="initials(currentName())" color="var(--surface-subtle)" [size]="36"></app-avatar>
+        <div>
+          <div class="crd-current-name">{{ currentName() }}</div>
+          <div class="crd-current-role">{{ flow().responsiblePersonRoleName }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crd-group">
+      <label class="crd-label" for="crd-new">New responsible person</label>
+      <select
+        id="crd-new"
+        class="crd-select"
+        [class.crd-select--muted]="!selectedId()"
+        [disabled]="loading()"
+        [ngModel]="selectedId()"
+        (ngModelChange)="selectedId.set($event)"
+      >
+        <option [ngValue]="null">Select a person…</option>
+        @for (choice of choices(); track choice.id) {
+          <option [ngValue]="choice.id">
+            {{ choice.fullName }}{{ choice.position ? ' · ' + choice.position : '' }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="crd-group">
+      <label class="crd-checkbox">
+        <input type="checkbox" [ngModel]="reassignNotStarted()" (ngModelChange)="reassignNotStarted.set($event)" />
+        Also reassign not-started tasks to the new person
+      </label>
+      <p class="crd-note">
+        Only tasks of the new person's role move. Tasks of other roles, and tasks that are in progress or completed,
+        stay with their current assignee.
+      </p>
+    </div>
+
+    <div class="crd-footer">
+      <button type="button" class="crd-cancel" (click)="dismissed.emit()">Cancel</button>
+      <button type="button" class="btn btn--primary" [disabled]="!selectedId() || submitting()" (click)="confirm()">
+        Change responsible
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+.activity-group-title {
+  padding: 12px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+}
+
+.activity-group {
+  border-radius: var(--radius-lg);
+  --table-cols: 132px minmax(200px, 1fr) 96px var(--status-col) var(--date-col) 64px 160px;
+  --status-col: 170px;
+  --date-col: 96px;
+  --table-min-width: 1050px;
+  margin-bottom: 16px;
+}
+
+.activity-group .activity-row {
+  --row-pad: var(--space-4);
+  padding: 14px var(--space-4);
+  gap: var(--space-4);
+}
+
+.activity-row--pending {
+  --row-bg: var(--warning-subtle);
+}
+
+.activity-note {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.pts-achieved {
+  color: var(--success-ink);
+}
+
+.pts-muted {
+  color: var(--ink-secondary);
+}

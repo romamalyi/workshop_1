@@ -1,0 +1,49 @@
+.emp-list {
+  --table-cols: 2fr 1fr 1fr 1.6fr 1fr;
+  --table-min-width: 826px;
+  transition: opacity 0.15s;
+}
+
+.emp-list--refreshing {
+  opacity: 0.6;
+}
+
+.emp-vtable-viewport {
+  /* The height is set by appFitToWindow: down to the bottom of the scrolling area, so only the table scrolls. */
+  min-height: 240px;
+  min-width: var(--table-min-width);
+  overflow-x: hidden;
+}
+
+.emp-list .data-table__cell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.emp-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.emp-name-cell .employee-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.emp-list .emp-project-tags {
+  flex-wrap: nowrap;
+}
+
+.emp-list .emp-project-tag {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-list .emp-project-tag--more {
+  flex-shrink: 0;
+}

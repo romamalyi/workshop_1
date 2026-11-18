@@ -1,0 +1,32 @@
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Promotion celebration">
+  <div class="relative">
+    <!-- [muted] sets the property; a static muted attribute added after creation leaves the video unmuted and autoplay blocked. -->
+    <video
+      class="block max-h-[85dvh] max-w-full rounded-xl"
+      src="/assets/videos/promotion-celebration.mp4"
+      autoplay
+      playsinline
+      [muted]="true"
+      (ended)="close()"
+      (error)="close()"
+    ></video>
+    <button
+      type="button"
+      class="absolute top-2 right-2 flex cursor-pointer items-center justify-center rounded-full border-none bg-black/50 p-1.5 text-white hover:bg-black/70"
+      aria-label="Close video"
+      (click)="close()"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+      >
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+</div>

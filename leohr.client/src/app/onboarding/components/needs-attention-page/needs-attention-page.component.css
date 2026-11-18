@@ -1,0 +1,28 @@
+.ob-table-footnote {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #6b6b6b;
+  border-top: 0.5px solid var(--border-card);
+}
+
+.ob-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.ob-info-card {
+  background: var(--surface);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.ob-info-card p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #3a3a3a;
+}

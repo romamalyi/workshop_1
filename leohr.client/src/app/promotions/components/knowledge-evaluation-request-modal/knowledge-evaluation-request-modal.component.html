@@ -1,0 +1,44 @@
+<div class="modal-backdrop" appDialog (dialogClose)="close()">
+  <div class="modal-box modal-box--sm modal-box--overflow-visible">
+    <div class="modal-header">
+      <div class="modal-title">{{ evaluation() ? 'Edit request' : 'Plan knowledge evaluation' }}</div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="form-field">
+        <label>Date</label>
+        <app-date-picker [(value)]="date" [disablePast]="true" />
+      </div>
+
+      <div class="form-field">
+        <label for="ke-option">When</label>
+        <select class="input" #optionSelect id="ke-option" (change)="option.set($any(optionSelect.value))">
+          @for (item of options; track item.value) {
+            <option [value]="item.value" [selected]="item.value === option()">{{ item.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="ke-comment">Comment <span class="modal-optional">· optional</span></label>
+        <textarea
+          class="input"
+          #commentInput
+          id="ke-comment"
+          rows="3"
+          maxlength="1000"
+          placeholder="Preferred time of day, times that don't work…"
+          [value]="comment()"
+          (input)="comment.set(commentInput.value)"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!canSave()" (click)="save()">
+        {{ evaluation() ? 'Save' : 'Request' }}
+      </button>
+    </div>
+  </div>
+</div>

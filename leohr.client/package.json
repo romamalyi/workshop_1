@@ -1,0 +1,70 @@
+{
+  "name": "leohr.client",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "run-script-os",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "prestart": "node aspnetcore-https",
+    "start:windows": "ng serve --ssl --ssl-cert \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.pem\" --ssl-key \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.key\" --host=127.0.0.1",
+    "start:default": "ng serve --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\" --host=127.0.0.1",
+    "lint": "ng lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "cd .. && husky leohr.client/.husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,html}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "src/**/*.{css,scss}": [
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "private": true,
+  "packageManager": "npm@11.9.0",
+  "dependencies": {
+    "@angular/cdk": "^21.2.14",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "angular-oauth2-oidc": "^20.0.2",
+    "angular-oauth2-oidc-jwks": "^20.0.0",
+    "jest-editor-support": "*",
+    "ngx-leobit-components": "^1.0.1",
+    "ngx-toastr": "^20.0.5",
+    "run-script-os": "*",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.16.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.7",
+    "@angular/cli": "^21.2.7",
+    "@angular/compiler-cli": "^21.2.0",
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "angular-eslint": "21.4.0",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "jsdom": "^28.0.0",
+    "lint-staged": "^17.3.0",
+    "postcss": "^8.5.9",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.2.2",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.59.2",
+    "vitest": "^4.0.8"
+  }
+}

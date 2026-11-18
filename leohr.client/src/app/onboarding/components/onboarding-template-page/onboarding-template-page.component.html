@@ -1,0 +1,34 @@
+<div class="ob-content">
+  @switch (state()) {
+    @case ('ready') {
+      <app-onboarding-template-editor
+        layout="page"
+        [template]="template()"
+        [saving]="saving()"
+        (save)="save($event)"
+        (duplicate)="duplicate()"
+      />
+    }
+    @case ('loading') {
+      <p class="loading-text" role="status">Loading template...</p>
+    }
+    @case ('notFound') {
+      <p class="error-text">This template was not found.</p>
+      <a routerLink="/onboarding/templates">&larr; Task templates</a>
+    }
+    @default {
+      <p class="error-text">Could not load the template.</p>
+      <a routerLink="/onboarding/templates">&larr; Task templates</a>
+    }
+  }
+</div>
+
+@if (leavePrompt()) {
+  <app-confirm-dialog
+    title="Discard unsaved changes?"
+    message="Your changes to this template have not been saved."
+    confirmLabel="Discard"
+    (confirm)="answerLeavePrompt(true)"
+    (dismissed)="answerLeavePrompt(false)"
+  />
+}

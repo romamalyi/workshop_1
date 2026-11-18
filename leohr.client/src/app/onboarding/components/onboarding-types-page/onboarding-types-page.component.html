@@ -1,0 +1,146 @@
+<div class="ob-content">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Onboarding types</h1>
+      @if (!loading() && !loadFailed()) {
+        <p class="page-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    <button type="button" class="btn btn--primary" (click)="openEditor(null)">New Type</button>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-text" role="status">Loading onboarding types…</p>
+  } @else if (loadFailed()) {
+    <div
+      class="mx-auto mt-12 flex max-w-[520px] flex-col items-center gap-2 rounded-xl border-[0.5px] border-(--border-card) bg-(--surface) p-8 text-center shadow-(--shadow-card)"
+    >
+      <h2 class="text-lg font-bold text-(--ink)">Onboarding types couldn't be loaded</h2>
+      <p class="mb-3 text-sm text-(--ink-secondary)">The server returned an error. Try again in a moment.</p>
+      <button type="button" class="btn btn--secondary" (click)="load()">Try again</button>
+    </div>
+  } @else {
+    <div
+      class="mb-6 flex items-start gap-6 rounded-xl border-l-[3px] border-(--brand-end) bg-(--brand-tint) px-6 py-5 max-[880px]:flex-col"
+    >
+      <p class="flex-1 text-sm leading-relaxed text-slate-600">
+        A type is a named selection of active task templates. Creating a flow starts by choosing one, and only its
+        templates are instantiated. The template library stays the single place a task is defined — a type decides which
+        of those tasks a given kind of hire actually gets.
+      </p>
+      <div
+        class="w-1/4 shrink-0 border-l border-(--border-card) pl-6 max-[880px]:w-full max-[880px]:border-t max-[880px]:border-l-0 max-[880px]:pt-3 max-[880px]:pl-0"
+      >
+        <span class="block text-[11px] font-bold tracking-wider text-(--ink-secondary) uppercase">Library</span>
+        <span class="block text-[28px] leading-tight font-bold text-(--ink)">{{ libraryTemplateCount() }}</span>
+        <span class="mt-1 block text-[13px] leading-normal text-slate-600">
+          Active templates available to every type
+        </span>
+      </div>
+    </div>
+
+    @if (types().length === 0) {
+      <div
+        class="flex flex-col items-center gap-4 rounded-xl border-[0.5px] border-(--border-card) bg-(--surface) px-6 py-12 text-center shadow-(--shadow-card)"
+      >
+        <h2 class="text-base font-bold text-(--ink)">No onboarding types yet</h2>
+        <button type="button" class="btn btn--primary" (click)="openEditor(null)">New Type</button>
+      </div>
+    } @else {
+      <div class="data-table" role="table" style="--table-cols: 2.4fr 1fr 1fr 1.2fr 240px; --table-min-width: 820px">
+        <div class="data-table__head" role="row">
+          <span class="data-table__th" role="columnheader">Type</span>
+          <span class="data-table__th" role="columnheader">Templates</span>
+          <span class="data-table__th" role="columnheader">In use</span>
+          <span class="data-table__th" role="columnheader">Last edited</span>
+          <span class="data-table__th text-right!" role="columnheader">Actions</span>
+        </div>
+        @for (type of types(); track type.id) {
+          <div
+            class="data-table__row data-table__row--link"
+            [class]="type.isArchived ? '[--row-bg:var(--bg-input)] text-(--ink-secondary)' : 'text-(--ink-secondary)'"
+            tabindex="0"
+            [attr.aria-label]="'Edit ' + type.name"
+            (click)="openEditor(type.id)"
+            (keydown.enter)="openEditor(type.id)"
+            role="row"
+          >
+            <div class="data-table__cell" role="cell">
+              <div class="text-[15px] font-semibold" [class]="type.isArchived ? '' : 'text-(--ink)'">
+                {{ type.name }}
+              </div>
+              @if (type.description) {
+                <div class="mt-0.5 text-[13px]">{{ type.description }}</div>
+              }
+            </div>
+            <div
+              class="data-table__cell text-sm font-semibold whitespace-nowrap"
+              [class]="type.isArchived ? '' : 'text-(--ink)'"
+              role="cell"
+            >
+              {{ type.enabledTemplateCount }} of {{ libraryTemplateCount() }}
+            </div>
+            <div class="data-table__cell text-sm whitespace-nowrap" role="cell">{{ flowsLabel(type.flowCount) }}</div>
+            <div class="data-table__cell text-sm whitespace-nowrap" role="cell">
+              {{ (type.lastEditedAt | date: 'd MMM y') ?? '—' }}
+            </div>
+            <div
+              class="data-table__cell"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="$event.stopPropagation()"
+              role="cell"
+            >
+              <div class="flex justify-end gap-2">
+                @if (!type.isArchived) {
+                  <button
+                    type="button"
+                    class="btn btn--secondary btn--sm"
+                    [disabled]="busyIds().has(type.id)"
+                    [attr.aria-label]="'Duplicate ' + type.name"
+                    (click)="duplicate(type)"
+                  >
+                    <app-action-icon class="flex [&>svg]:size-3.5" name="copy" />
+                    Duplicate
+                  </button>
+                }
+                @if (type.isArchived) {
+                  <button
+                    type="button"
+                    class="btn btn--secondary btn--sm text-(--success-ink)!"
+                    [disabled]="busyIds().has(type.id)"
+                    [attr.aria-label]="'Restore ' + type.name"
+                    (click)="restore(type)"
+                  >
+                    <app-action-icon class="flex [&>svg]:size-3.5" name="restore" />
+                    Restore
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn--secondary btn--sm"
+                    [disabled]="busyIds().has(type.id)"
+                    [attr.aria-label]="'Archive ' + type.name"
+                    (click)="pendingArchive.set(type)"
+                  >
+                    <app-action-icon class="flex [&>svg]:size-3.5" name="archive" />
+                    Archive
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+@if (pendingArchive(); as type) {
+  <app-confirm-dialog
+    [title]="'Archive ‘' + type.name + '’?'"
+    message="It will no longer be available when creating flows. Existing flows are not affected."
+    confirmLabel="Archive"
+    (confirm)="confirmArchive(type)"
+    (dismissed)="pendingArchive.set(null)"
+  />
+}

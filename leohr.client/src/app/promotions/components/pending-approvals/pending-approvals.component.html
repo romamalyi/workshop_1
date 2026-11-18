@@ -1,0 +1,101 @@
+<div class="ob-content">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Pending approvals</h1>
+      <p class="page-subtitle">{{ subtitle() }}</p>
+    </div>
+    @if (hrManagerOptions$ | async; as hrManagers) {
+      @if (hrManagers.length) {
+        <app-multi-select-filter
+          label="HR"
+          searchPlaceholder="Search HR..."
+          [options]="hrManagers"
+          [selected]="(selectedHrManagers$ | async) ?? []"
+          [(cleared)]="hrCleared"
+          (selectedChange)="onHrManagersChange($event)"
+        />
+      }
+    }
+  </div>
+
+  <div
+    class="data-table pa-table"
+    role="table"
+    aria-label="Pending approvals"
+    [style.--table-cols]="canWriteManage() ? tableColsWithActions : tableCols"
+  >
+    <div class="data-table__head" role="row">
+      <span class="data-table__th" role="columnheader">Employee</span>
+      <span class="data-table__th" role="columnheader">Activity</span>
+      <span class="data-table__th" role="columnheader">Category</span>
+      <span class="data-table__th" role="columnheader">Completed on</span>
+      <span class="data-table__th" role="columnheader">Valid for</span>
+      <span class="data-table__th" role="columnheader">Points</span>
+      @if (canWriteManage()) {
+        <span class="data-table__th text-right!" role="columnheader">Actions</span>
+      }
+    </div>
+    @for (item of items(); track item.employeeActivityId) {
+      <div class="data-table__row pa-row" role="row">
+        <span class="data-table__cell" role="cell">
+          <a
+            class="pa-employee"
+            [routerLink]="
+              item.promotionId !== null ? ['/promotions', item.promotionId] : ['/employees', item.employeeId]
+            "
+          >
+            <span class="data-table__primary">{{ item.employeeName || '—' }}</span>
+            @if (item.fromRole && item.toRole) {
+              <span class="data-table__sub">
+                <span class="pa-role-from">{{ item.fromRole }}</span>
+                <span class="pa-role-arrow">→</span>
+                <span class="pa-role-to">{{ item.toRole }}</span>
+              </span>
+            } @else {
+              <span class="data-table__sub">Not tied to a promotion yet</span>
+            }
+          </a>
+        </span>
+
+        <span class="data-table__cell data-table__stack" role="cell">
+          <span class="data-table__text pa-activity">{{ item.name }}</span>
+          @if (item.note) {
+            <span class="data-table__sub pa-note">{{ item.note }}</span>
+          }
+        </span>
+
+        <span class="data-table__cell" role="cell">
+          <span class="chip" [style.background]="categoryBackground(item.category)">{{
+            item.category | categoryLabel
+          }}</span>
+        </span>
+
+        <span class="data-table__cell data-table__muted" role="cell">{{
+          item.accomplishedOn ? (item.accomplishedOn | date: 'dd MMM yyyy') : '—'
+        }}</span>
+
+        <span class="data-table__cell data-table__muted" role="cell">{{ item.withinPeriod | periodLabel }}</span>
+
+        <span class="data-table__cell data-table__strong" role="cell">{{ item.pointsSnapshot }} pts</span>
+
+        @if (canWriteManage()) {
+          <span class="data-table__cell data-table__actions" role="cell">
+            <button class="btn btn--secondary btn--sm" type="button" (click)="approvingItem.set(item)">Approve</button>
+          </span>
+        }
+      </div>
+    } @empty {
+      <div class="data-table__empty pa-empty-row">Nothing awaiting approval right now.</div>
+    }
+  </div>
+</div>
+
+@if (approvingItem(); as approving) {
+  <app-approve-activity-dialog
+    [activityName]="approving.name"
+    [accomplishedOn]="approving.accomplishedOn"
+    [note]="approving.note"
+    (confirm)="approve(approving, $event)"
+    (cancel)="approvingItem.set(null)"
+  />
+}

@@ -1,0 +1,104 @@
+<div class="ob-content">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Knowledge evaluation</h1>
+      <p class="page-subtitle">
+        Requests from employees. Assign who conducts the KE, set the date and record the result.
+      </p>
+    </div>
+    <app-multi-select-filter
+      label="Status"
+      searchPlaceholder="Search status..."
+      [options]="statusLabels"
+      [selected]="selectedStatuses()"
+      [(cleared)]="statusesCleared"
+      (selectedChange)="selectedStatuses.set($event)"
+    />
+  </div>
+
+  @if (visibleItems(); as list) {
+    <div
+      class="data-table"
+      role="table"
+      aria-label="Knowledge evaluations"
+      style="--table-cols: 1.4fr 1.3fr 1.6fr 1.3fr 1.3fr 1fr 0.6fr 110px; --table-min-width: 1000px"
+    >
+      <div class="data-table__head" role="row">
+        <span class="data-table__th" role="columnheader">Employee</span>
+        <span class="data-table__th" role="columnheader">Requested</span>
+        <span class="data-table__th" role="columnheader">Comment</span>
+        <span class="data-table__th" role="columnheader">Conducted by</span>
+        <span class="data-table__th" role="columnheader">KE date</span>
+        <span class="data-table__th" role="columnheader">Status</span>
+        <span class="data-table__th" role="columnheader">Link</span>
+        <span class="data-table__th text-right!" role="columnheader">Actions</span>
+      </div>
+      @for (e of list; track e.id) {
+        <div class="data-table__row" role="row">
+          <span class="data-table__cell" role="cell">
+            <a class="data-table__primary" [routerLink]="['/promotions', e.promotionId]">{{ e.employeeName || '—' }}</a>
+          </span>
+          <span class="data-table__cell data-table__stack" role="cell">
+            <span class="data-table__text">{{ e.requestedDate | date: 'dd MMM yyyy' }}</span>
+            <span class="data-table__sub">{{ optionLabel[e.requestedOption] }}</span>
+          </span>
+          <span class="data-table__cell data-table__muted whitespace-pre-wrap break-words" role="cell">{{
+            e.comment || '—'
+          }}</span>
+          <span class="data-table__cell" role="cell">
+            @if (e.conductedByName) {
+              <span class="data-table__text font-semibold">{{ e.conductedByName }}</span>
+            } @else if (missingConductor(e)) {
+              <span class="font-semibold text-(--warning-ink)">Not assigned</span>
+            } @else {
+              <span class="data-table__muted">—</span>
+            }
+          </span>
+          <span class="data-table__cell data-table__stack" role="cell">
+            @if (e.evaluationDate) {
+              <span class="data-table__text font-semibold">{{ e.evaluationDate | date: 'dd MMM yyyy' }}</span>
+              @if (isOverdue(e)) {
+                <span class="data-table__sub data-table__sub--danger">Result not recorded</span>
+              }
+            } @else if (missingDate(e)) {
+              <span class="font-semibold text-(--warning-ink)">Not assigned</span>
+            } @else {
+              <span class="data-table__muted">—</span>
+            }
+          </span>
+          <span class="data-table__cell" role="cell">
+            <span class="badge badge--{{ statusMeta[e.status].modifier }}">{{ statusMeta[e.status].label }}</span>
+          </span>
+          <span class="data-table__cell data-table__text" role="cell">
+            @if (e.link) {
+              <a class="text-(--link) underline" [href]="e.link" target="_blank" rel="noopener noreferrer">Open</a>
+            } @else {
+              <span class="data-table__muted">—</span>
+            }
+          </span>
+          <span class="data-table__cell data-table__actions" role="cell">
+            @if (e.status === statuses.Planned) {
+              <button
+                type="button"
+                class="btn btn--sm whitespace-nowrap"
+                [class.btn--primary]="needsScheduling(e)"
+                [class.btn--secondary]="!needsScheduling(e)"
+                (click)="editing.set(e)"
+              >
+                {{ needsScheduling(e) ? 'Schedule' : 'Edit' }}
+              </button>
+            }
+          </span>
+        </div>
+      } @empty {
+        <div class="data-table__empty">No knowledge evaluations.</div>
+      }
+    </div>
+  } @else {
+    <p class="loading-text">Loading…</p>
+  }
+</div>
+
+@if (editing(); as evaluation) {
+  <app-knowledge-evaluation-edit-modal [evaluation]="evaluation" (saved)="onSaved()" (closeModal)="editing.set(null)" />
+}

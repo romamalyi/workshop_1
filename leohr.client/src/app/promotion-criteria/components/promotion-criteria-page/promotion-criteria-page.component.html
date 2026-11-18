@@ -1,0 +1,107 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Promotion Criteria</h1>
+      <p class="page-subtitle">Manage promotion criteria per technology and seniority level</p>
+    </div>
+    <div class="page-header__actions">
+      <label class="toggle-label">
+        <input type="checkbox" [checked]="showInactive$ | async" (change)="showInactive$.next(!showInactive$.value)" />
+        <span>Show inactive</span>
+      </label>
+      <button class="btn btn--primary" (click)="openCreate()">+ Add Criteria</button>
+    </div>
+  </div>
+
+  <div class="category-filter">
+    @for (t of technologies; track t) {
+      <button class="category-filter__chip" [class.active]="(activeTab$ | async) === t" (click)="activeTab$.next(t)">
+        {{ t | technologyLabel }}
+      </button>
+    }
+  </div>
+
+  <div class="catalog-section">
+    <div class="catalog-row pc-row-header">
+      <span class="pc-col-level">Level</span>
+      <span class="pc-col-experience">Work Exp.</span>
+      <span class="pc-col-required">Required Experience</span>
+      <span class="pc-col-achievement">Required Achievement</span>
+      <span class="pc-col-english">English</span>
+      <span class="pc-col-ke">KE</span>
+      <span class="pc-col-score">Score</span>
+      <span class="pc-col-actions"></span>
+    </div>
+
+    <div class="catalog-list">
+      @for (c of criteria$ | async; track c.id) {
+        <div class="catalog-row pc-row" [class.inactive]="!c.isActive">
+          <span class="pc-col-level">
+            {{ seniorityLabel(c.seniority) }}
+            @if (c.subLevel !== 'None') {
+              <span class="pc-sublevel">{{ subLevelLabel(c.subLevel) }}</span>
+            }
+          </span>
+          <span class="pc-col-experience catalog-row__meta">{{
+            workExperienceLabel(c.workExperienceFromMonths, c.workExperienceToMonths)
+          }}</span>
+          <span class="pc-col-required catalog-row__meta">{{ c.requiredExperience || '—' }}</span>
+          <span class="pc-col-achievement catalog-row__meta">{{ c.requiredActivityName || '—' }}</span>
+          <span class="pc-col-english catalog-row__badge">{{ englishLevelLabel(c.englishLevel) }}</span>
+          <span class="pc-col-ke catalog-row__badge">{{
+            c.keRequired === 'None' ? '' : keRequirementLabel(c.keRequired)
+          }}</span>
+          <span class="pc-col-score catalog-row__badge catalog-row__badge--highlight">{{
+            c.activitiesScore != null ? c.activitiesScore + ' pts' : '—'
+          }}</span>
+          <div class="pc-col-actions catalog-row__actions">
+            @if (!c.isActive) {
+              <span class="badge badge--neutral">Inactive</span>
+            }
+            @if (c.isActive) {
+              <button class="btn btn--secondary btn--sm" (click)="openEdit(c)">Edit</button>
+              <button
+                class="btn btn--danger btn--sm btn--icon"
+                tooltip="Delete"
+                aria-label="Delete"
+                (click)="confirmDelete(c)"
+              >
+                <app-action-icon name="trash" />
+              </button>
+            } @else {
+              <button class="btn btn--secondary btn--sm" (click)="reactivate(c)">Reactivate</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (modalOpen$ | async) {
+  <app-promotion-criteria-modal
+    [criteria]="editingCriteria"
+    [activities]="(activities$ | async) ?? []"
+    [duplicateError]="(duplicateError$ | async) ?? false"
+    (save)="onSave($event)"
+    (cancel)="closeModal()"
+  >
+  </app-promotion-criteria-modal>
+}
+
+@if (deletingCriteria$ | async; as deletingCriteria) {
+  <app-confirm-dialog
+    title="Delete criteria?"
+    [message]="
+      'Are you sure you want to delete criteria for ' +
+      seniorityLabel(deletingCriteria.seniority) +
+      ' ' +
+      subLevelLabel(deletingCriteria.subLevel) +
+      '?'
+    "
+    confirmLabel="Delete"
+    (confirm)="executeDelete()"
+    (dismissed)="deletingCriteria$.next(null)"
+  >
+  </app-confirm-dialog>
+}

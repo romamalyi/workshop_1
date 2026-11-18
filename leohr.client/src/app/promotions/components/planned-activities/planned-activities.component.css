@@ -1,0 +1,18 @@
+:host {
+  display: block;
+}
+
+.page-header {
+  margin-bottom: 12px;
+}
+
+.pl-table {
+  --table-cols: 1.6fr 2.2fr 1.2fr 1.2fr 1.2fr;
+  --table-min-width: 800px;
+}
+
+.pl-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

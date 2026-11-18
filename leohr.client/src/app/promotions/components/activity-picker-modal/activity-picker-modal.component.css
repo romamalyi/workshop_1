@@ -1,0 +1,408 @@
+.picker-search {
+  margin-bottom: 0.75rem;
+}
+
+.picker-categories {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.picker-cat-btn {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  border: none;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-weight: 500;
+  background: var(--bg-input);
+  color: var(--ink);
+}
+
+.picker-cat-btn--active {
+  background: var(--brand-end);
+  color: white;
+}
+
+.picker-list {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.picker-empty {
+  font-size: 0.8125rem;
+  color: var(--ink-secondary);
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.picker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0.625rem;
+  border: 1px solid var(--border-card);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background: var(--surface-subtle);
+}
+
+/* Touch screens keep :hover on the last tapped card, so only mouse devices get the hover colour. */
+@media (hover: hover) {
+  .picker-item:hover {
+    background: var(--brand-tint);
+  }
+}
+
+.picker-item--selected {
+  background: var(--brand-tint);
+  border-color: var(--brand-end);
+}
+
+.picker-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.picker-item__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.picker-item__period {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-secondary);
+}
+
+.picker-item__pts {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--success-ink);
+  white-space: nowrap;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
+.picker-modal-overlay {
+  align-items: flex-start;
+  padding-top: 10vh;
+}
+
+.picker-modal {
+  max-width: 1040px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  overflow: hidden;
+}
+
+.picker-left {
+  flex: 3;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.picker-actions {
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--border-card);
+}
+
+/* Right panel */
+.lh-panel {
+  flex: 2;
+  min-width: 0;
+  border-left: 1px solid var(--border-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.lh-panel__head {
+  padding: 0.75rem 0.8rem 0.6rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-card);
+}
+
+.lh-panel__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px 4px;
+}
+
+.lh-panel__empty {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  padding: 0.5rem 0;
+}
+
+.lh-cat-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  padding: 0 0 0.375rem;
+}
+
+.lh-cat-title--spaced {
+  padding-top: 0.75rem;
+}
+
+.lh-cat-title--list {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-card);
+  margin-top: 0.25rem;
+}
+
+.lh-gap__togo--reached {
+  color: var(--success-ink);
+  font-weight: 600;
+}
+
+app-progress-bar {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.lh-gap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.lh-gap__num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+
+  small {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink-secondary);
+  }
+}
+
+.lh-gap__togo {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--success-ink);
+  background: var(--brand-tint);
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.lh-gap__togo--met {
+  color: var(--success-ink);
+  background: var(--success-bg);
+}
+
+.lh-act-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.3125rem;
+  font-size: 0.75rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--success-bg);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.lh-act-row--locked {
+  opacity: 0.7;
+  background: var(--brand-tint);
+}
+
+.lh-act-name {
+  flex: 1;
+  color: var(--ink);
+  font-size: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lh-act-pts {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success-ink);
+  white-space: nowrap;
+}
+
+.lh-gap__pending {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning-ink);
+  white-space: nowrap;
+}
+
+.lh-chip {
+  font-size: 0.625rem;
+  font-weight: 600;
+  background: var(--bg-input);
+  color: var(--ink-secondary);
+  padding: 0.0625rem 0.375rem;
+  border-radius: 0.375rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Negative margin keeps the row as tall as the locked rows. */
+.lh-btn-remove {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-block: -4px;
+  margin-left: 0.5rem;
+}
+
+.lh-totals {
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--border-card);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lh-overplan-hint {
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.875rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--success-ink);
+  background: var(--brand-tint);
+  border-radius: 0.5rem;
+}
+
+.lh-totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.lh-totals-label {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+}
+
+.lh-totals-label--bold {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.lh-totals-big {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink-secondary);
+}
+
+.lh-totals-big--ok {
+  color: var(--success-ink);
+}
+
+@media (max-width: 768px), (max-height: 500px) {
+  .picker-modal-overlay {
+    align-items: center;
+    padding: 12px;
+  }
+
+  .picker-modal {
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    height: calc(100dvh - 24px);
+    max-height: none;
+    border-radius: 12px;
+  }
+
+  .picker-left {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Under 16px iOS zooms into the field on focus. */
+  .picker-search {
+    min-height: 44px;
+    margin-top: 12px;
+    font-size: 16px;
+  }
+
+  .picker-cat-btn {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .picker-list {
+    flex: none;
+    overflow: visible;
+  }
+
+  .picker-item {
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  .lh-panel {
+    flex: 0 1 auto;
+    min-height: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-card);
+  }
+
+  .lh-panel__scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 20dvh;
+    overscroll-behavior: contain;
+  }
+
+  .picker-actions .btn {
+    min-height: 44px;
+  }
+
+  .picker-actions .btn--primary {
+    flex: 1;
+  }
+}
+
+/* Phones in landscape: side by side, since a stacked footer leaves the list no room. */
+@media (max-height: 500px) {
+  .picker-modal {
+    flex-direction: row;
+  }
+
+  .lh-panel {
+    flex: 0 0 40%;
+    border-top: none;
+    border-left: 1px solid var(--border-card);
+  }
+
+  .lh-panel__scroll {
+    flex: 1 1 0;
+    max-height: none;
+  }
+}

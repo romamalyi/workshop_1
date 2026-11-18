@@ -1,0 +1,110 @@
+@let settings = phases();
+@let dirty = isDirty();
+@let valid = hoursValid();
+
+@if (phasesResource.isLoading() && !settings) {
+  <p class="loading-text" role="status">Loading phase settings...</p>
+}
+
+@if (phasesResource.error()) {
+  <p class="error-text" role="alert">Failed to load phase settings.</p>
+}
+
+@if (settings) {
+  <div class="os-layout">
+    <section class="os-card" aria-labelledby="phases-heading">
+      <header class="os-card-header">
+        <h2 id="phases-heading" class="os-card-title">Phases</h2>
+        <p class="os-card-desc">Defaults for the onboarding phases. Applies to every flow.</p>
+      </header>
+
+      <div class="os-table" role="table" aria-label="Phase settings">
+        <div class="os-tr-row" role="row">
+          <div class="os-role-info" role="cell">
+            <span id="probation-label" class="os-role-name">Probation period</span>
+            <span class="os-role-hint"
+              >Tasks due at the end of probation are dated from the start date plus this period</span
+            >
+          </div>
+          <div class="os-role-actions" role="cell">
+            <select
+              class="os-select"
+              aria-labelledby="probation-label"
+              [ngModel]="settings.probationMonths"
+              (ngModelChange)="update({ probationMonths: $event })"
+            >
+              @for (months of probationOptions; track months) {
+                <option [ngValue]="months">{{ months }} {{ months === 1 ? 'month' : 'months' }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="os-tr-row" role="row">
+          <div class="os-role-info" role="cell">
+            <span id="max-hours-label" class="os-role-name"
+              >Max onboarding hours <span class="os-inactive-badge">No effect yet</span></span
+            >
+            <span class="os-role-hint">Log up to N hours during the onboarding phase</span>
+          </div>
+          <div class="os-role-actions" role="cell">
+            <input
+              type="number"
+              class="os-input"
+              aria-labelledby="max-hours-label"
+              [min]="minHours"
+              [max]="maxHours"
+              [ngModel]="settings.maxOnboardingHours"
+              (ngModelChange)="update({ maxOnboardingHours: $event })"
+            />
+          </div>
+        </div>
+      </div>
+
+      <footer class="os-card-footer">
+        <div class="os-unsaved">
+          @if (dirty && !valid) {
+            <span role="alert">Max onboarding hours must be between {{ minHours }} and {{ maxHours }}</span>
+          } @else if (dirty) {
+            <span role="status">Unsaved changes</span>
+          }
+        </div>
+        <div class="os-footer-btns">
+          <button
+            type="button"
+            class="btn btn--secondary"
+            aria-label="Reset changes"
+            [disabled]="!dirty"
+            (click)="reset()"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            class="btn btn--primary"
+            aria-label="Save changes"
+            [disabled]="!dirty || !valid"
+            (click)="save()"
+          >
+            Save Changes
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="os-help-column" aria-label="Informational help cards">
+      <article class="os-help-card os-help-card--blue">
+        <h3 class="os-help-title">New flows only</h3>
+        <p class="os-help-text">
+          Due dates are fixed when a flow is created, so changing the probation period doesn't move tasks in existing
+          flows.
+        </p>
+      </article>
+
+      <article class="os-help-card">
+        <span class="os-help-label">Max onboarding hours</span>
+        <p class="os-help-text">Saved, but no effect yet: LeoHR doesn't read hours from Time Tracking.</p>
+      </article>
+    </aside>
+  </div>
+}

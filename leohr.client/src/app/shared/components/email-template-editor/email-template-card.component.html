@@ -1,0 +1,125 @@
+@let current = template();
+<div class="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6 max-lg:grid-cols-1">
+  <section class="detail-card" [attr.aria-labelledby]="'email-' + current.id + '-title'">
+    <h2 [id]="'email-' + current.id + '-title'" class="detail-card__title">
+      {{ current.label }}
+    </h2>
+
+    <fieldset class="m-0 border-0 p-0">
+      <legend class="mb-2 p-0 text-sm font-semibold text-(--ink)">Recipients</legend>
+      <div class="border-t border-(--divider)" role="table" [attr.aria-label]="current.label + ' recipients'">
+        @for (role of current.allowedRecipients; track role) {
+          <div class="flex items-center justify-between gap-4 border-b border-(--divider) py-2.5" role="row">
+            <span class="text-sm text-(--ink)" role="cell">{{ roleLabels[role] }}</span>
+            <div class="flex gap-5" role="cell">
+              <label class="toggle-label">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked('to', role)"
+                  (change)="setRecipient('to', role, $any($event.target).checked)"
+                />
+                <span>To</span>
+              </label>
+              <label class="toggle-label">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked('cc', role)"
+                  (change)="setRecipient('cc', role, $any($event.target).checked)"
+                />
+                <span>CC</span>
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+      @if (toMissing()) {
+        <span class="field-error">Choose at least one To recipient.</span>
+      }
+    </fieldset>
+
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-baseline justify-between">
+        <label [for]="'email-' + current.id + '-subject'" class="text-sm font-semibold text-(--ink)"> Subject </label>
+        <span class="text-[13px] text-(--ink-secondary)">{{ subject().length }} / {{ subjectMaxLength }}</span>
+      </div>
+      <input
+        #subjectInput
+        [id]="'email-' + current.id + '-subject'"
+        class="input input--sm"
+        type="text"
+        autocomplete="off"
+        [attr.maxlength]="subjectMaxLength"
+        [value]="subject()"
+        (input)="subject.set(subjectInput.value)"
+      />
+      @if (subjectMissing()) {
+        <span class="field-error">Enter a subject.</span>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-baseline justify-between">
+        <label [for]="'email-' + current.id + '-body'" class="text-sm font-semibold text-(--ink)">
+          Body{{ current.isHtml ? ' (HTML)' : '' }}
+        </label>
+        <button
+          type="button"
+          class="cursor-pointer text-xs font-semibold text-(--success-ink)"
+          (click)="showPreview.set(!showPreview())"
+        >
+          {{ showPreview() ? 'Hide preview' : 'Show preview' }}
+        </button>
+      </div>
+      <textarea
+        #bodyInput
+        [id]="'email-' + current.id + '-body'"
+        class="input min-h-65 resize-y leading-normal"
+        [value]="body()"
+        (input)="body.set(bodyInput.value)"
+      ></textarea>
+      @if (bodyMissing()) {
+        <span class="field-error">Enter the email text.</span>
+      }
+      @if (showPreview()) {
+        <div
+          class="mt-2 rounded-lg border border-(--border-card) bg-(--bg-input) p-4 text-sm leading-normal text-(--ink)"
+          aria-label="Preview"
+        >
+          @if (current.isHtml) {
+            <div [innerHTML]="body()"></div>
+          } @else {
+            <div class="whitespace-pre-wrap">{{ body() }}</div>
+          }
+        </div>
+      }
+    </div>
+
+    <footer class="flex items-center justify-between">
+      <span class="text-sm font-semibold text-(--warning-ink)">
+        @if (isDirty()) {
+          <span role="status">Unsaved changes</span>
+        }
+      </span>
+      <div class="flex gap-3">
+        <button type="button" class="btn btn--secondary" [disabled]="!isDirty() || saving()" (click)="reset()">
+          Reset
+        </button>
+        <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="save()">Save Changes</button>
+      </div>
+    </footer>
+  </section>
+
+  <aside class="flex flex-col gap-4" [attr.aria-label]="'About the ' + current.label + ' email'">
+    <article class="flex flex-col gap-2 rounded-2xl border border-(--border-card) bg-(--surface) px-5 py-4">
+      <span class="text-xs font-bold tracking-[0.04em] text-(--ink-secondary) uppercase">Placeholders</span>
+      <ul class="m-0 grid list-none gap-1.5 p-0 text-sm text-(--ink-soft)">
+        @for (placeholder of current.placeholders; track placeholder.token) {
+          <li>
+            <code class="rounded-md bg-(--surface-hover) px-1.5 text-[13px] text-(--ink)">{{ placeholder.token }}</code>
+            {{ placeholder.meaning }}
+          </li>
+        }
+      </ul>
+    </article>
+  </aside>
+</div>

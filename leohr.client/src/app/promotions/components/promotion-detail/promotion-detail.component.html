@@ -1,0 +1,237 @@
+<div class="page-container">
+  @if (state$ | async; as state) {
+    @if (authService.canReadManage() || state.detail?.status === PromotionStatus.Sent) {
+      <button type="button" class="detail-back" (click)="goBack()">← Back</button>
+    }
+
+    @if (state.loading) {
+      <p class="loading-text">Loading…</p>
+    }
+    @if (state.error) {
+      <p class="error-text">{{ state.error }}</p>
+    }
+
+    @if (state.detail; as d) {
+      @let status = PROMOTION_STATUS[d.status];
+      <div class="promo-header">
+        <app-avatar [initials]="getInitials(d)" [color]="getAvatarColor(d)" [size]="56"></app-avatar>
+        <div class="promo-header__info">
+          <div class="promo-header__title">
+            <h1 class="promo-header__name">{{ d.firstName }} {{ d.lastName }}</h1>
+            <span class="badge badge--{{ status.modifier }}">{{ status.label }}</span>
+          </div>
+          <div class="promo-header__role">
+            <span>{{ d.fromRole }}</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" role="img" aria-label="to">
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                stroke="var(--success-ink)"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="promo-header__to">{{ d.toRole }}</span>
+            @if (d.technology) {
+              <span class="promo-header__dot" aria-hidden="true">·</span>
+              <span class="promo-header__tech">{{ d.technology | technologyLabel }}</span>
+            }
+            <button
+              type="button"
+              class="promo-header__link"
+              aria-label="View all levels roadmap"
+              (click)="levelsModalOpen.set(true)"
+            >
+              View levels
+            </button>
+          </div>
+        </div>
+        <dl class="promo-header__meta">
+          <div>
+            <dt>Promotion holder</dt>
+            <dd>{{ d.promotionHolderName ?? (d.promotionHolderId || '—') }}</dd>
+          </div>
+          @if (d.hrManager) {
+            <div>
+              <dt>HR</dt>
+              <dd>{{ d.hrManager }}</dd>
+            </div>
+          }
+          @if (d.sentAt) {
+            <div>
+              <dt>Sent on</dt>
+              <dd>{{ d.sentAt | date: 'dd MMM yyyy' }}</dd>
+            </div>
+          }
+        </dl>
+        @if (authService.canWriteManage() && d.status !== PromotionStatus.Sent) {
+          <div class="promo-header__actions">
+            @if (!status.closed) {
+              <button
+                class="btn btn--secondary"
+                type="button"
+                aria-label="Edit holder and level"
+                (click)="editModalOpen.set(true)"
+              >
+                Edit
+              </button>
+            }
+            @if (status.sendable) {
+              <button
+                class="btn btn--primary"
+                type="button"
+                [tooltip]="keBlocksSend(d) ? 'Complete the knowledge evaluation first' : null"
+                [disabled]="keBlocksSend(d)"
+                (click)="openSendModal(d)"
+              >
+                Send promotion email
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="promo-detail__columns" [class.promo-detail__columns--single]="!showKeCard(d)">
+        <div class="promo-detail__main">
+          <app-criteria-panel
+            [criteria]="d.criteria"
+            [checkedLabels]="(checkedCriteriaLabels$ | async)!"
+            (criterionChange)="onCriterionChange($event, d.id)"
+            [disableAll]="!authService.canWriteManage() || verifying() || d.status === PromotionStatus.Sent"
+            [verifying]="verifying()"
+            [overrides]="d.criteriaOverrides"
+            [lockedLabels]="lockedCriteriaLabels()"
+            [automaticLabels]="automaticCriteriaLabels"
+          >
+          </app-criteria-panel>
+          @if (d.exceptionNote; as exceptionNote) {
+            <div class="promo-detail__exception">
+              <div class="promo-detail__exception-label">Exception note</div>
+              <p>{{ exceptionNote }}</p>
+            </div>
+          }
+        </div>
+        @if (showKeCard(d)) {
+          <app-knowledge-evaluation-card
+            [promotionId]="d.id"
+            [canPlan]="canPlanKe(d)"
+            [criterionMet]="(checkedCriteriaLabels$ | async)?.has('KE required') ?? false"
+            (changed)="onKnowledgeEvaluationChanged()"
+          ></app-knowledge-evaluation-card>
+        }
+      </div>
+
+      <!-- Activities section -->
+      <div style="margin-bottom: 24px">
+        <app-activities-section
+          [activities]="d.activities"
+          [plannedActivities]="d.plannedActivities"
+          [selfReportedActivities]="d.selfReportedActivities"
+          [pointsAchieved]="d.pointsAchieved"
+          [pointsPlanned]="d.pointsPlanned"
+          [pointsRequired]="d.pointsRequired"
+          [promotionId]="d.id"
+          [employeeId]="d.employeeId"
+          [promotion]="d"
+          (planActivity)="addActivity($event, d.id)"
+          (approveActivity)="startApprove(d, $event.employeeActivityId)"
+          (revertApproval)="revertApproval(d.id, $event)"
+          (reportActivity)="selfReportActivity(d.employeeId, $event)"
+          (removeActivity)="removeActivity(d.id, $event)"
+        ></app-activities-section>
+      </div>
+
+      @if (approving(); as a) {
+        <app-approve-activity-dialog
+          [activityName]="a.activity.name"
+          [accomplishedOn]="a.activity.accomplishedOn"
+          [note]="a.activity.note"
+          (confirm)="approveActivity(a.promotionId, a.activity.employeeActivityId, $event)"
+          (cancel)="approving.set(null)"
+        />
+      }
+
+      @if (levelsModalOpen()) {
+        <app-all-levels-modal
+          [fromRole]="d.fromRole"
+          [toRole]="d.toRole"
+          [technology]="d.technology"
+          (closeModal)="levelsModalOpen.set(false)"
+        />
+      }
+
+      @if (editModalOpen()) {
+        <app-promotion-edit-modal
+          [promotion]="d"
+          (saved)="onPromotionEdited()"
+          (closeModal)="editModalOpen.set(false)"
+        />
+      }
+    }
+
+    @if (state.detail?.promotionHistory?.length) {
+      <section class="ph-section">
+        <button type="button" class="ph-toggle" [attr.aria-expanded]="isMenuExpanded()" (click)="expandMenu()">
+          <svg
+            class="ph-toggle-icon"
+            [class.ph-toggle-icon--open]="isMenuExpanded()"
+            width="16"
+            height="16"
+            viewBox="0 0 14 14"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 5l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Past promotions
+          <span class="ph-count">{{ state.detail!.promotionHistory!.length }}</span>
+        </button>
+
+        @if (isMenuExpanded()) {
+          <div class="ph-list">
+            @for (item of state.detail!.promotionHistory!; track item.id) {
+              <button type="button" class="ph-row" (click)="navigateToPromotion(item.id)">
+                <span class="ph-row__roles">
+                  {{ item.fromRole }}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" role="img" aria-label="to">
+                    <path
+                      d="M3 8h10M9 4l4 4-4 4"
+                      stroke="var(--success-ink)"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span class="ph-row__to">{{ item.toRole }}</span>
+                </span>
+                <span class="ph-row__meta">
+                  <span class="ph-row__date">{{ item.createdAt | date: 'MMM yyyy' }}</span>
+                  <app-badge [status]="item.status"></app-badge>
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
+
+@if (sendModal(); as modal) {
+  <app-send-promotion-dialog
+    [promotionId]="modal.promotionId"
+    [subject]="modal.subject"
+    [body]="modal.body"
+    (confirmed)="confirmSend($event)"
+    (cancelled)="closeSendModal()"
+  />
+}
+@if (showCelebration()) {
+  <app-celebration-video (closed)="showCelebration.set(false)" />
+}

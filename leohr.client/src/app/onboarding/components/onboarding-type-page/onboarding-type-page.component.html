@@ -1,0 +1,286 @@
+<div class="ob-content">
+  <a class="ob-back-link" routerLink="/onboarding/types">&larr; Onboarding types</a>
+
+  @switch (state()) {
+    @case ('ready') {
+      <header class="page-header flex-wrap items-start! gap-4">
+        <div class="min-w-[260px] flex-1">
+          <div class="flex items-center gap-3">
+            <input
+              type="text"
+              class="min-w-0 flex-1 border-0 border-b-2 border-transparent bg-transparent p-0 text-[32px] leading-[1.2] font-bold text-(--ink) outline-none placeholder:text-(--ink-secondary) focus:border-(--brand-end)"
+              [class.field-sizing-content]="nameRequired()"
+              [class.flex-none]="nameRequired()"
+              placeholder="Untitled type"
+              aria-label="Type name"
+              [value]="name()"
+              (input)="setName($any($event.target).value)"
+              (blur)="touchName()"
+            />
+            @if (nameRequired()) {
+              <span
+                class="shrink-0 rounded-full border border-(--danger-bg) bg-(--danger-bg) px-[7px] py-px text-[9px] font-bold tracking-[0.05em] text-(--danger-ink) uppercase"
+                >Required</span
+              >
+            }
+          </div>
+          @if (nameErrorShown()) {
+            <p class="field-error">{{ nameError() }}</p>
+          }
+          <input
+            type="text"
+            class="mt-2 w-full border-0 border-b-2 border-transparent bg-transparent p-0 text-sm text-(--ink-secondary) outline-none placeholder:text-(--ink-secondary) focus:border-(--brand-end)"
+            placeholder="Short description of when this type is used"
+            aria-label="Type description"
+            [value]="description()"
+            (input)="description.set($any($event.target).value)"
+          />
+          @if (descriptionErrorShown()) {
+            <p class="field-error">{{ descriptionError() }}</p>
+          }
+        </div>
+        <div class="page-header__actions flex-wrap">
+          @if (showDuplicate()) {
+            <span [tooltip]="canDuplicate() ? null : 'Save the type first'">
+              <button type="button" class="btn btn--secondary" [disabled]="!canDuplicate()" (click)="duplicate()">
+                Duplicate
+              </button>
+            </span>
+          }
+          <span [tooltip]="enabledCount() === 0 ? 'Enable at least one template to save the type' : null">
+            <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="save()">
+              {{ saving() ? 'Saving…' : 'Save Type' }}
+            </button>
+          </span>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6 max-[1000px]:grid-cols-1">
+        <div class="flex flex-col gap-4">
+          @if (groups().length > 0) {
+            <section
+              class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-(--border-card) bg-(--surface) px-5 py-4"
+            >
+              <div>
+                <h2 class="m-0 text-lg font-bold text-(--ink)">{{ summaryLine() }}</h2>
+                <p class="m-0 text-[13px] text-(--ink-secondary)">
+                  {{ missingCount() }} active {{ missingCount() === 1 ? 'template' : 'templates' }} not in this type
+                </p>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <span [tooltip]="missingCount() === 0 ? 'All active templates are already in this type' : null">
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    [disabled]="missingCount() === 0"
+                    (click)="addOpen.set(true)"
+                  >
+                    Add Templates
+                  </button>
+                </span>
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  [disabled]="templateCount() === 0"
+                  (click)="pendingRemoval.set({ kind: 'all' })"
+                >
+                  Remove all
+                </button>
+              </div>
+            </section>
+          }
+
+          @for (group of groups(); track group.phase) {
+            <section class="overflow-hidden rounded-xl border border-(--border-card) bg-(--surface)">
+              <header class="flex flex-wrap items-center justify-between gap-3 bg-[#191919] px-5 py-3 text-white">
+                <div class="flex items-baseline gap-3.5">
+                  <h2 class="m-0 text-[15px] font-bold">{{ group.label }}</h2>
+                  <span class="text-[13px] text-white/70">{{ group.hint }}</span>
+                </div>
+                <div class="flex items-center gap-3.5">
+                  <span class="text-[10px] font-bold tracking-wider text-white/70 uppercase">
+                    {{ group.enabledCount }} of {{ group.activeCount }} enabled
+                  </span>
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-full border border-white/35 bg-transparent px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/10"
+                    (click)="pendingRemoval.set({ kind: 'phase', group })"
+                  >
+                    Remove phase
+                  </button>
+                </div>
+              </header>
+
+              @for (row of group.rows; track row.template.id) {
+                <div
+                  class="grid grid-cols-[44px_minmax(0,2.6fr)_1.2fr_1.5fr_1.4fr_auto] items-center gap-4 border-b border-(--border-card) px-5 py-3.5 last:border-b-0 max-[880px]:grid-cols-[44px_minmax(0,1fr)_auto]"
+                  [class.bg-(--surface-subtle)]="!row.isEnabled || row.isDeactivated"
+                  [class.opacity-60]="!row.isEnabled || row.isDeactivated"
+                >
+                  <button
+                    type="button"
+                    class="toggle-btn"
+                    [class.toggle-btn--on]="row.isEnabled && !row.isDeactivated"
+                    [attr.aria-pressed]="row.isEnabled"
+                    [attr.aria-label]="(row.isEnabled ? 'Disable ' : 'Enable ') + row.template.title"
+                    [disabled]="row.isDeactivated"
+                    (click)="toggleTemplate(row.template.id)"
+                  >
+                    <span class="toggle-thumb"></span>
+                  </button>
+                  <div class="min-w-0">
+                    <div class="text-[15px] font-semibold text-(--ink)">{{ row.template.title }}</div>
+                    <div class="text-xs text-(--ink-secondary)">{{ formatFieldSummary(row.template.fields) }}</div>
+                  </div>
+                  <span class="text-sm font-semibold text-(--ink) max-[880px]:col-start-2">
+                    {{ row.template.responsibleRoleName ?? '—' }}
+                  </span>
+                  <span class="text-sm text-(--ink-secondary) max-[880px]:col-start-2">
+                    {{
+                      formatShortDueRule(row.template.dueOffsetDays, row.template.dueDirection, row.template.dueAnchor)
+                    }}
+                  </span>
+                  <div class="flex flex-wrap gap-1.5 max-[880px]:col-start-2">
+                    @if (row.isDeactivated) {
+                      <span
+                        class="rounded-full bg-(--bg-input) px-2 py-1 text-[10px] font-bold tracking-wider text-(--ink-secondary) uppercase"
+                      >
+                        Deactivated
+                      </span>
+                    }
+                    <span
+                      class="rounded-full bg-(--bg-input) px-2 py-1 text-[10px] font-bold tracking-wider text-(--ink-secondary) uppercase"
+                      [tooltip]="appliesTooltip(row.template)"
+                    >
+                      {{ appliesBadge(row.template) }}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn--secondary btn--sm max-[880px]:col-start-3 max-[880px]:row-start-1"
+                    [attr.aria-label]="'Remove ' + row.template.title"
+                    (click)="removeTemplate(row.template.id)"
+                  >
+                    Remove
+                  </button>
+                </div>
+              }
+            </section>
+          } @empty {
+            <section
+              class="flex flex-col items-center gap-3 rounded-xl border border-(--border-card) bg-(--surface) px-8 py-14 text-center"
+            >
+              <h2 class="m-0 text-xl font-bold text-(--ink)">No templates in this type yet</h2>
+              <p class="m-0 max-w-[420px] text-sm text-(--ink-secondary)">
+                Pick the tasks this kind of hire should get. Every active template in the library is available, and
+                nothing is added until you choose it.
+              </p>
+              <button
+                type="button"
+                class="btn btn--primary mt-2"
+                [disabled]="missingCount() === 0"
+                (click)="addOpen.set(true)"
+              >
+                Add Templates
+              </button>
+            </section>
+          }
+        </div>
+
+        <aside class="flex flex-col gap-4">
+          <section class="rounded-xl border border-(--border-card) bg-(--surface) p-5">
+            <h2 class="m-0 text-[22px] font-bold text-(--ink)">
+              This type generates {{ enabledCount() }} {{ enabledCount() === 1 ? 'task' : 'tasks' }}
+            </h2>
+            <p class="mt-2 mb-0 text-[13px] leading-normal text-(--ink-secondary)">
+              Each enabled template becomes one task when a flow of this type is created. A disabled template stays in
+              the type but generates nothing. Optional templates are still offered as a tick in the wizard.
+            </p>
+          </section>
+
+          <section
+            class="flex items-center justify-between gap-4 rounded-xl border border-(--border-card) bg-(--surface) p-5"
+          >
+            <div>
+              <div class="text-sm font-semibold text-(--ink)">Type is active</div>
+              <p class="m-0 mt-1 text-[13px] text-(--ink-secondary)">{{ activeHelper() }}</p>
+            </div>
+            <button
+              type="button"
+              class="toggle-btn disabled:cursor-not-allowed disabled:opacity-50"
+              [class.toggle-btn--on]="isActive()"
+              [attr.aria-pressed]="isActive()"
+              aria-label="Type is active"
+              [disabled]="enabledCount() === 0"
+              (click)="toggleActive()"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </section>
+
+          <section class="rounded-xl border border-(--border-card) bg-(--surface-subtle) p-5">
+            <h2 class="m-0 text-sm font-semibold text-(--ink)">Toggle versus remove</h2>
+            <p class="mt-1.5 mb-0 text-[13px] leading-normal text-(--ink-secondary)">
+              The toggle disables a template for this type without taking it out, so it can be switched back on later.
+              Remove takes it out of the type entirely.
+            </p>
+          </section>
+
+          <section class="rounded-xl border border-(--border-card) bg-(--surface-subtle) p-5">
+            <h2 class="m-0 text-sm font-semibold text-(--ink)">Adding a new template</h2>
+            <p class="mt-1.5 mb-3 text-[13px] leading-normal text-(--ink-secondary)">
+              A template created in the library is not in any type until it is switched on here, or added from the
+              template editor. Nothing is auto-included, so an unfinished template never reaches a hire.
+            </p>
+            <button type="button" class="btn btn--secondary btn--sm" (click)="openTemplateLibrary()">
+              Open template library
+            </button>
+          </section>
+        </aside>
+      </div>
+    }
+    @case ('loading') {
+      <p class="loading-text" role="status">Loading onboarding type...</p>
+    }
+    @case ('notFound') {
+      <p class="error-text">This onboarding type was not found.</p>
+    }
+    @default {
+      <p class="error-text">Could not load the onboarding type.</p>
+    }
+  }
+</div>
+
+@if (addOpen()) {
+  <app-onboarding-type-add-templates
+    [templates]="addable()"
+    [typeName]="name()"
+    (added)="addTemplates($event)"
+    (closed)="addOpen.set(false)"
+  />
+}
+
+@if (pendingRemoval(); as removal) {
+  <app-confirm-dialog
+    [title]="removal.kind === 'all' ? 'Remove all templates?' : 'Remove phase ‘' + removal.group.label + '’?'"
+    [message]="
+      removal.kind === 'all'
+        ? 'All ' + templateCount() + ' templates will be removed from this type.'
+        : 'Its ' + removal.group.activeCount + ' templates will be removed from this type.'
+    "
+    [confirmLabel]="removal.kind === 'all' ? 'Remove all' : 'Remove'"
+    (confirm)="confirmRemoval()"
+    (dismissed)="pendingRemoval.set(null)"
+  />
+}
+
+@if (leavePrompt()) {
+  <app-confirm-dialog
+    title="You have unsaved changes"
+    message="Leaving this page will discard them."
+    confirmLabel="Leave"
+    cancelLabel="Stay"
+    (confirm)="answerLeavePrompt(true)"
+    (dismissed)="answerLeavePrompt(false)"
+  />
+}

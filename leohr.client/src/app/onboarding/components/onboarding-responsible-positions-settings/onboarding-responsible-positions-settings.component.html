@@ -1,0 +1,94 @@
+@let current = positions();
+
+@if (positionsResource.isLoading() && !current) {
+  <p class="loading-text" role="status">Loading allowed positions...</p>
+}
+
+@if (positionsResource.error()) {
+  <p class="error-text" role="alert">Failed to load allowed positions.</p>
+}
+
+@if (current) {
+  <section class="os-card os-card--stacked" aria-labelledby="positions-heading">
+    <header class="os-card-header">
+      <h2 id="positions-heading" class="os-card-title">Flow Responsible Person</h2>
+      <p class="os-card-desc">
+        Positions whose employees can be picked as the responsible person when a flow is created. Every employee holding
+        a selected position appears in that dropdown.
+      </p>
+    </header>
+
+    <div class="os-positions">
+      <span id="allowed-positions-label" class="os-role-name">Allowed positions</span>
+
+      <div class="os-chip-box">
+        @for (position of current.allowed; track position.name) {
+          <span class="os-chip">
+            {{ position.name }}
+            <span class="os-chip-count">{{ position.employeeCount }}</span>
+            <span
+              class="os-chip-remove-wrap"
+              [attr.data-tip]="current.allowed.length <= 1 ? 'At least one position is required' : null"
+            >
+              <button
+                type="button"
+                class="os-chip-remove"
+                [attr.aria-label]="'Remove ' + position.name"
+                [disabled]="current.allowed.length <= 1 || isSaving()"
+                (click)="remove(position.name)"
+              >
+                ×
+              </button>
+            </span>
+          </span>
+        }
+
+        <select
+          #picker
+          class="os-chip-add"
+          aria-labelledby="allowed-positions-label"
+          [disabled]="addable().length === 0 || isSaving()"
+          (change)="add(picker.value); picker.value = ''"
+        >
+          <option value="">+ Add position…</option>
+          @for (position of addable(); track position.name) {
+            <option [value]="position.name">{{ position.name }} ({{ position.employeeCount }})</option>
+          }
+        </select>
+      </div>
+
+      <p class="os-positions-note">
+        @if (current.candidates.length > 0) {
+          {{ current.candidates.length }} {{ current.candidates.length === 1 ? 'employee' : 'employees' }} can be
+          picked:
+          @for (candidate of current.candidates; track candidate.id; let last = $last) {
+            {{ candidate.fullName }}{{ last ? '.' : ',' }}
+          }
+        } @else {
+          No employees can be picked right now.
+        }
+        At least one position is required.
+      </p>
+
+      @if (current.flowsWithWarningsCount > 0) {
+        <p class="os-positions-warning" role="status">
+          {{ current.flowsWithWarningsCount }} running
+          {{ current.flowsWithWarningsCount === 1 ? 'flow needs' : 'flows need' }} attention: a responsible person or a
+          role's default person is no longer valid. Nothing is changed automatically. Look for the warning icon on the
+          Flows page to see what to review.
+        </p>
+      }
+
+      <div class="os-positions-info">
+        <h3 class="os-positions-info-title">Tasks follow the responsible person</h3>
+        <p class="os-help-text">
+          If the picked person holds a role that also has tasks in the flow, those tasks go to them instead of the
+          role's default person.
+        </p>
+        <p class="os-help-text">
+          Example: an HR Assistant picked as responsible also gets the flow's HR Assistant tasks.
+        </p>
+      </div>
+    </div>
+  </section>
+}

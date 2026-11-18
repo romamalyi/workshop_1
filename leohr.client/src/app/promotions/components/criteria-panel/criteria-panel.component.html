@@ -1,0 +1,95 @@
+@if (criteria()) {
+  <section class="detail-card" aria-labelledby="criteria-title">
+    <div class="detail-card__header">
+      <h2 id="criteria-title" class="detail-card__title">Criteria</h2>
+      @if (verifying()) {
+        <span class="detail-card__meta" role="status">Verifying…</span>
+      } @else {
+        <span class="detail-card__meta">{{ checkedCount() }} of {{ items().length }} met</span>
+      }
+    </div>
+    <app-progress-bar label="Criteria met" [value]="checkedCount()" [max]="items().length"></app-progress-bar>
+    <ul class="criteria-list">
+      @for (item of items(); track item.label) {
+        <li
+          class="criteria-item"
+          [class.criteria-item--open]="isMarkable(item)"
+          [class.criteria-item--done]="item.done && item.comment === null"
+          [attr.role]="isMarkable(item) ? 'button' : null"
+          [attr.tabindex]="isMarkable(item) ? 0 : null"
+          (click)="startMark(item)"
+          (keydown.enter)="startMark(item)"
+        >
+          <span class="criteria-check" [class.criteria-check--done]="item.done" aria-hidden="true">
+            @if (item.done) {
+              <svg width="12" height="12" viewBox="0 0 10 10" fill="none">
+                <path
+                  d="M2 5l2.5 2.5L8 3"
+                  stroke="white"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            }
+          </span>
+          <div class="criteria-content">
+            <span class="criteria-text">
+              <span class="criteria-label">{{ item.title }}:</span>
+              <span class="criteria-value">{{ item.value }}</span>
+              <span class="sr-only">{{ item.done ? 'Met' : 'Not met' }}</span>
+            </span>
+            @if (item.comment !== null) {
+              <span class="criteria-comment">Comment: {{ item.comment }}</span>
+            }
+            @if (item.locked) {
+              <span class="criteria-hint">Set by a successful knowledge evaluation</span>
+            } @else if (item.automatic) {
+              <span class="criteria-hint">Ticked automatically when approved activities reach {{ item.value }}</span>
+            }
+          </div>
+          @if (item.revertible) {
+            <button
+              type="button"
+              class="btn btn--secondary btn--sm"
+              [attr.aria-label]="'Revert: ' + item.title"
+              (click)="$event.stopPropagation(); revert(item)"
+            >
+              Revert
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+@if (marking(); as m) {
+  <div class="modal-backdrop" appDialog (dialogClose)="cancelMark()">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mark-criterion-title">
+      <div class="modal-header">
+        <div id="mark-criterion-title" class="modal-title">Mark criterion as met</div>
+      </div>
+      <p class="m-0 text-sm text-(--ink-soft)">{{ m.title }}: {{ m.value }}</p>
+      <div class="form-field">
+        <div class="modal-label">Comment <span class="modal-optional">· optional</span></div>
+        <textarea
+          class="input block"
+          rows="4"
+          maxlength="500"
+          aria-label="Comment"
+          placeholder="e.g. Replaced with AZ-305 by agreement with the delivery manager"
+          [ngModel]="comment()"
+          (ngModelChange)="comment.set($event)"
+        ></textarea>
+        <p class="m-0 text-[13px] text-(--ink-secondary)">
+          Use it to record any exception, e.g. the activity was changed or replaced. The employee will see this comment.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn--secondary" (click)="cancelMark()">Cancel</button>
+        <button type="button" class="btn btn--primary" (click)="confirmMark()">Mark as met</button>
+      </div>
+    </div>
+  </div>
+}

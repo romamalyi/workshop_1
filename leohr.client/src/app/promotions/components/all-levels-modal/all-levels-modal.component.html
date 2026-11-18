@@ -1,0 +1,228 @@
+<div class="modal-backdrop" appDialog (dialogClose)="closeModal.emit()">
+  <div class="modal-box roadmap-modal">
+    <div class="roadmap-modal-header">
+      <div class="roadmap-header-left">
+        <h2 class="modal-title">Career Track Roadmap</h2>
+        <div class="tech-select-wrap">
+          <select class="tech-select" [ngModel]="selectedTechnology()" (ngModelChange)="onTechnologyChange($event)">
+            @for (t of technologies; track t) {
+              <option [value]="t">{{ t | technologyLabel }}</option>
+            }
+          </select>
+          <svg class="tech-select-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M2 4l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" (click)="closeModal.emit()" aria-label="Close modal">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    @if (loading() && nodes().length === 0) {
+      <div class="roadmap-loading">
+        <p class="loading-text">Loading roadmap track...</p>
+      </div>
+    } @else if (!loading() && nodes().length === 0) {
+      <div class="roadmap-empty">
+        <p class="empty-text">No criteria defined for this technology track yet.</p>
+      </div>
+    } @else {
+      <div class="roadmap-wrapper" [class.is-loading]="loading()">
+        <button
+          class="nav-arrow nav-arrow--left"
+          type="button"
+          [disabled]="!hasPrev()"
+          (click)="prev()"
+          aria-label="Previous level"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6"></path>
+          </svg>
+        </button>
+
+        <div
+          class="roadmap-viewport"
+          [class.is-dragging]="isDragging()"
+          (wheel)="onWheel($event)"
+          (mousedown)="onMouseDown($event)"
+          (mousemove)="onMouseMove($event)"
+          (mouseup)="onMouseUp()"
+          (mouseleave)="onMouseUp()"
+        >
+          <div
+            class="roadmap-track-container"
+            [style.transform]="trackTransform()"
+            [style.width.px]="trackTotalWidth()"
+          >
+            <svg class="road-path-svg" [attr.width]="trackTotalWidth()" [attr.height]="totalHeight()" fill="none">
+              @if (completedSvgPath()) {
+                <path
+                  class="svg-path path-completed"
+                  [attr.d]="completedSvgPath()"
+                  stroke="#24b400"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              }
+              @if (halfWaySvgPath()) {
+                <path
+                  class="svg-path path-halfway"
+                  [attr.d]="halfWaySvgPath()"
+                  stroke="#24b400"
+                  stroke-width="3.5"
+                  stroke-dasharray="8 8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              }
+              @if (futureSvgPath()) {
+                <path
+                  class="svg-path path-future"
+                  [attr.d]="futureSvgPath()"
+                  stroke="#d8d8d0"
+                  stroke-width="3"
+                  stroke-dasharray="8 8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              }
+            </svg>
+
+            <div class="nodes-layer">
+              @for (node of nodes(); track node.role; let i = $index) {
+                <div
+                  class="node-element"
+                  [class.node-active]="i === currentIndex()"
+                  [style.left.px]="node.x"
+                  [style.top.px]="node.y"
+                  (click)="selectNode(i)"
+                >
+                  <div class="node-circle circle-{{ node.status }}" [class.circle-active]="i === currentIndex()">
+                    @if (i === currentIndex()) {
+                      <div class="circle-pulse"></div>
+                    }
+
+                    @switch (node.status) {
+                      @case (LevelNodeStatus.Passed) {
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="3"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M20 6L9 17l-5-5"></path>
+                        </svg>
+                      }
+                      @case (LevelNodeStatus.Current) {
+                        <div class="current-inner-dot"></div>
+                      }
+                      @case (LevelNodeStatus.Locked) {
+                        @if (currentEmployeeIndex() >= 0) {
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                          >
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                          </svg>
+                        } @else {
+                          <div class="future-inner-dot"></div>
+                        }
+                      }
+                      @default {
+                        <div class="future-inner-dot"></div>
+                      }
+                    }
+                  </div>
+
+                  @if (i !== currentIndex()) {
+                    <div class="node-role-label label-below label-{{ node.status }}">
+                      {{ node.role }}
+                    </div>
+                  }
+
+                  @if (i === currentIndex()) {
+                    <div
+                      class="inline-requirements req-above"
+                      (wheel)="$event.stopPropagation()"
+                      (mousedown)="$event.stopPropagation()"
+                    >
+                      <div class="req-title-row">
+                        <span class="req-title-text">{{ node.role }}</span>
+                      </div>
+
+                      <div class="req-grid">
+                        @for (req of node.requirements; track req.label) {
+                          <div class="req-item">
+                            <span class="req-label">{{ req.label }}</span>
+                            <span class="req-value">{{ req.value }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="nav-arrow nav-arrow--right"
+          type="button"
+          [disabled]="!hasNext()"
+          (click)="next()"
+          aria-label="Next level"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+</div>

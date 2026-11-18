@@ -1,0 +1,53 @@
+<div class="ob-content">
+  <header class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Promotion settings</h1>
+      <p class="page-subtitle">Defaults for new promotions and the announcement email.</p>
+    </div>
+  </header>
+
+  <div class="line-tabs mb-6" role="tablist" aria-label="Settings sections">
+    <button
+      id="promotion-settings-tab-holder"
+      type="button"
+      role="tab"
+      aria-controls="promotion-settings-panel-holder"
+      class="line-tab"
+      [class.line-tab--active]="activeTab() === 'holder'"
+      [attr.aria-selected]="activeTab() === 'holder'"
+      (click)="activeTab.set('holder')"
+    >
+      Default holder
+    </button>
+    <button
+      id="promotion-settings-tab-email"
+      type="button"
+      role="tab"
+      aria-controls="promotion-settings-panel-email"
+      class="line-tab"
+      [class.line-tab--active]="activeTab() === 'email'"
+      [attr.aria-selected]="activeTab() === 'email'"
+      (click)="activeTab.set('email')"
+    >
+      Promotion email
+    </button>
+  </div>
+
+  <!-- [hidden], not @if: both panels stay mounted so their unsaved edits survive a tab switch. -->
+  <div
+    id="promotion-settings-panel-holder"
+    role="tabpanel"
+    aria-labelledby="promotion-settings-tab-holder"
+    [hidden]="activeTab() !== 'holder'"
+  >
+    <app-promotion-holder-settings />
+  </div>
+  <div
+    id="promotion-settings-panel-email"
+    role="tabpanel"
+    aria-labelledby="promotion-settings-tab-email"
+    [hidden]="activeTab() !== 'email'"
+  >
+    <app-email-template-editor category="Promotions" />
+  </div>
+</div>

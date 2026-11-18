@@ -1,0 +1,142 @@
+.send-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.send-field .modal-label {
+  margin-bottom: 0;
+}
+
+.send-preview {
+  padding: 10px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.send-preview--body {
+  max-height: 200px;
+  overflow: auto;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.recipient-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.recipient-field--cc {
+  cursor: text;
+}
+
+.recipient-field__label {
+  flex: none;
+  width: 28px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 28px;
+  color: var(--ink-secondary);
+}
+
+.recipient-field__empty {
+  font-size: 14px;
+  line-height: 28px;
+  color: var(--danger-ink);
+}
+
+.recipient-chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recipient-chips__input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.recipient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-hover);
+  font-size: 14px;
+  color: var(--ink);
+  cursor: default;
+}
+
+.recipient-chip--added {
+  padding-right: 4px;
+  background: var(--brand-tint);
+}
+
+.recipient-chip__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.recipient-chip__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.recipient-chip__remove:hover {
+  background: var(--divider);
+  color: var(--ink);
+}
+
+.send-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.send-hint--list {
+  padding: 0;
+  list-style: none;
+}
+
+.send-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}

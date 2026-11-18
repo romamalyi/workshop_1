@@ -1,0 +1,237 @@
+<div class="ob-content">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Onboarding Flows</h1>
+      @if (!loading()) {
+        <p class="page-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    <button class="btn btn--primary" routerLink="/onboarding/flows/new">New Onboarding Flow</button>
+  </div>
+
+  @if (unresolved().taskCount > 0) {
+    <div class="ob-warning-banner" role="alert">
+      <div>
+        <div class="ob-warning-banner-title">
+          {{ unresolved().taskCount === 1 ? '1 task' : unresolved().taskCount + ' tasks' }} across
+          {{ unresolved().flowCount === 1 ? '1 flow' : unresolved().flowCount + ' flows' }}
+          {{ unresolved().taskCount === 1 ? 'has' : 'have' }} no assignee
+        </div>
+        <div class="ob-warning-banner-text">
+          Their role has no default person, so they were created without an owner.
+          {{ unresolved().flowCount === 1 ? 'This flow stays' : 'These flows stay' }}
+          {{ statusLabels[Status.CreatedUnresolved] }} until every task is assigned.
+        </div>
+      </div>
+      <button class="btn btn--secondary" routerLink="/onboarding/needs-attention">Review unassigned tasks</button>
+    </div>
+  }
+
+  @if (needsReview() > 0) {
+    <div class="ob-warning-banner ob-warning-banner--with-icon" role="alert">
+      <svg class="ob-warning-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3.5 2.5 20h19L12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+      <div>
+        <div class="ob-warning-banner-title">
+          {{ needsReview() === 1 ? '1 flow needs' : needsReview() + ' flows need' }} attention: a responsible person or
+          a role's default person is no longer valid.
+        </div>
+        <div class="ob-warning-banner-text">
+          Nothing is changed automatically. Look for the warning icon in the table to see what to review.
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="loading-text" role="status">Loading onboarding flows...</p>
+  } @else if (flows().length === 0) {
+    <div class="ob-empty-state">
+      <div class="ob-empty-state-title">No onboarding flows yet</div>
+      <p class="ob-empty-state-text">Create a flow for a new hire to generate their 3-month onboarding plan.</p>
+      <button class="btn btn--primary" routerLink="/onboarding/flows/new">New Onboarding Flow</button>
+    </div>
+  } @else {
+    <!-- Summary cards -->
+    <div class="ob-summary-grid">
+      @for (card of summaryCards(); track card.label) {
+        <div class="ob-summary-card" [class.ob-summary-card--alert]="card.alert">
+          <span class="ob-summary-label">{{ card.label }}</span>
+          <span class="ob-summary-value" [class.ob-summary-value--alert]="card.alert">{{ card.value }}</span>
+          @let more = card.more ?? [];
+          <div class="ob-summary-detail">
+            {{ card.detail }}{{ more.length > 0 ? itemSeparator : '' }}
+            @if (more.length > 0) {
+              <span
+                #moreTrigger
+                class="ob-more"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Show ' + more.length + ' more'"
+                (mouseenter)="fitMoreList(moreTrigger)"
+                (focus)="fitMoreList(moreTrigger)"
+                >+{{ more.length }} more
+                <span class="ob-more-list" role="list">
+                  @for (item of more; track $index) {
+                    <span class="ob-more-item" role="listitem">{{ item }}</span>
+                  }
+                </span>
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="emp-filter-bar">
+      <div class="emp-search-wrap">
+        <svg class="emp-search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="#9a9a9a" stroke-width="1.6" />
+          <path d="M13 13l3.5 3.5" stroke="#9a9a9a" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <input
+          class="input input--sm emp-search-input"
+          placeholder="Search by name..."
+          aria-label="Search flows by new hire name"
+          autocomplete="off"
+          [value]="searchTerm()"
+          (input)="onSearchChange($any($event.target).value)"
+        />
+      </div>
+
+      <div class="emp-filter-dropdowns">
+        <app-multi-select-filter
+          label="Status"
+          searchPlaceholder="Search status..."
+          [options]="statusOptions"
+          [selected]="selectedStatuses()"
+          [(cleared)]="statusCleared"
+          (selectedChange)="onStatusChange($event)"
+        />
+        @if (responsibleOptions().length) {
+          <app-multi-select-filter
+            label="Responsible HR"
+            searchPlaceholder="Search HR..."
+            [options]="responsibleOptions()"
+            [selected]="selectedResponsible()"
+            [(cleared)]="responsibleCleared"
+            (selectedChange)="onResponsibleChange($event)"
+          />
+        }
+      </div>
+    </div>
+
+    @if (visibleFlows().length === 0) {
+      <div class="ob-empty-state">
+        <div class="ob-empty-state-title">No flows match your filters</div>
+        <p class="ob-empty-state-text">Try another name, or change the Status or Responsible HR filter.</p>
+      </div>
+    } @else {
+      <!-- Flows table -->
+      <div
+        class="data-table"
+        role="table"
+        style="--table-cols: 2fr 1fr 1fr 1.4fr 1.2fr 1.2fr; --table-min-width: 820px"
+      >
+        <div class="data-table__head" role="row">
+          <span class="data-table__th" role="columnheader">New hire</span>
+          <span class="data-table__th" role="columnheader">Employment</span>
+          <span class="data-table__th" role="columnheader">Start date</span>
+          <span class="data-table__th" role="columnheader">Current phase</span>
+          <span class="data-table__th" role="columnheader">Tasks</span>
+          <span class="data-table__th ob-status-col" role="columnheader">Attention</span>
+        </div>
+        @for (flow of visibleFlows(); track flow.id) {
+          @let attention = flowAttention(flow);
+          @let percent = progressPercent(flow);
+          <div
+            class="data-table__row data-table__row--link"
+            [class.ob-row--unresolved]="attention === Attention.Unresolved"
+            tabindex="0"
+            (click)="openFlow(flow)"
+            (keydown.enter)="openFlow(flow)"
+            role="row"
+          >
+            <div class="data-table__cell" role="cell">
+              <div class="ob-hire-cell">
+                <app-avatar
+                  [initials]="initials(flow.fullName)"
+                  [color]="avatarColor(flow.id)"
+                  [size]="36"
+                ></app-avatar>
+                <div>
+                  <div class="ob-hire-name">{{ flow.fullName }}</div>
+                  @if (attention === Attention.Unresolved) {
+                    <div class="ob-hire-role ob-cell-sub--warning">
+                      {{ statusLabels[flow.status] }} · {{ unassignedLabel(flow.unassignedTaskCount) }}
+                    </div>
+                  } @else if (flow.position) {
+                    <div class="ob-hire-role">{{ flow.position }}</div>
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="data-table__cell" role="cell">
+              <div class="ob-cell-primary">{{ employmentLabels[flow.employmentType] }}</div>
+              @if (flow.level) {
+                <div class="ob-level">{{ levelLabels[flow.level] }}</div>
+              }
+            </div>
+            <div class="data-table__cell" role="cell">
+              <div class="ob-cell-primary">{{ flow.startDate | date: 'EEE d MMM y' }}</div>
+              <div class="ob-cell-sub" [class.ob-cell-sub--alert]="startsSoon(flow.startDate)">
+                {{ relativeStart(flow.startDate) }}
+              </div>
+            </div>
+            <div class="data-table__cell" role="cell">
+              <span class="ob-cell-primary">{{ currentPhase(flow) }}</span>
+            </div>
+            <div class="data-table__cell" role="cell">
+              <div class="ob-tasks-cell">
+                <div
+                  class="ob-donut"
+                  [style.background]="'conic-gradient(var(--brand-end) ' + percent + '%, var(--border-card) 0)'"
+                >
+                  <span class="ob-donut-inner">{{ percent }}<span class="ob-donut-unit">%</span></span>
+                </div>
+                <span class="ob-tasks-count">{{ doneTaskCount(flow) }} / {{ flow.tasks.length }}</span>
+              </div>
+            </div>
+            <div class="data-table__cell ob-status-col" role="cell">
+              <div class="ob-attention-cell">
+                @if (flow.warnings.length > 0) {
+                  <span
+                    class="ob-flow-warning"
+                    role="img"
+                    aria-label="Needs attention"
+                    [tooltip]="warningTooltip(flow)"
+                    tooltipHeading="Needs attention"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 3.5 2.5 20h19L12 3.5Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linejoin="round"
+                      />
+                      <path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                }
+                @if (attention) {
+                  <span class="ob-attention" [class]="attentionClasses[attention]">{{
+                    attentionLabels[attention]
+                  }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+        <p class="ob-table-hint">Select a row to open the full 3-month plan for that hire.</p>
+      </div>
+    }
+  }
+</div>

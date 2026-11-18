@@ -1,0 +1,40 @@
+<div class="modal-backdrop" appDialog (dialogClose)="close()">
+  <div class="modal-box modal-box--overflow-visible">
+    <div class="modal-header">
+      <div class="modal-title">Edit promotion</div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="form-field">
+        <label for="promotion-holder">Promotion holder</label>
+        <app-search-select
+          inputId="promotion-holder"
+          label="Promotion holder"
+          placeholder="Search employee…"
+          [options]="holderOptions()"
+          [selectedId]="holderId() || null"
+          [selectedLabel]="holderName() || null"
+          [clearable]="false"
+          (picked)="selectHolder($event)"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="promotion-to-role">Promoted to</label>
+        <select class="input" #levelSelect id="promotion-to-role" (change)="toRole.set(levelSelect.value)">
+          @for (level of levelOptions(); track level) {
+            <option [value]="level" [selected]="level === toRole()">{{ level }}</option>
+          }
+        </select>
+        @if (levelChanged()) {
+          <span class="text-[13px] text-(--ink-secondary)">Criteria are checked again for the new level.</span>
+        }
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!canSave()" (click)="save()">Save</button>
+    </div>
+  </div>
+</div>

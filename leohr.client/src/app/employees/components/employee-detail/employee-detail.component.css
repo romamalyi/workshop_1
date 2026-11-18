@@ -1,0 +1,163 @@
+.navitgation-btns {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pdp-row-label {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pdp-view-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdp-link-value {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.pdp-edit-btn {
+  font-size: inherit;
+  text-decoration: none;
+}
+
+.pdp-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  margin-left: 12px;
+  height: 26px;
+}
+
+.pdp-input {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 2px 8px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.pdp-action-btn {
+  white-space: nowrap;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    margin-top: 0;
+    padding: 0 12px 12px 12px;
+    box-sizing: border-box;
+  }
+
+  .back-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+
+  .detail-header-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .detail-header-info {
+    width: 100%;
+  }
+
+  .detail-name {
+    font-size: 18px;
+    word-break: break-word;
+  }
+
+  .detail-role {
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .detail-tabs {
+    display: flex;
+    width: 100%;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-card, #e8e8e3);
+  }
+
+  .detail-tab {
+    flex: 1;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .detail-section {
+    padding: 14px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 0;
+    word-break: break-word;
+  }
+
+  .row-value {
+    word-break: break-all;
+  }
+
+  .pdp-edit-container {
+    margin-left: 0;
+    width: 100%;
+    flex-direction: column;
+    height: auto;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .pdp-input {
+    height: 40px;
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .pdp-action-btn {
+    height: 40px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .timeline-card {
+    padding: 10px 12px;
+  }
+
+  .history-summary {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

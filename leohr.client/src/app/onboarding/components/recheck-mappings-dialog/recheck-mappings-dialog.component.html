@@ -1,0 +1,70 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancel()">
+  <div class="modal-box modal-box--wide p-0! gap-0!" role="dialog" aria-modal="true" aria-labelledby="recheck-title">
+    <div class="px-7 pt-7 pb-5 border-b border-[var(--border-card)]">
+      <h2 id="recheck-title" class="modal-title">Recheck mappings</h2>
+      <p class="mt-2 mb-0 text-sm text-[var(--ink-secondary)]">
+        {{ taskCountLabel(preview().length) }} will be assigned: {{ summary() }}.
+      </p>
+    </div>
+
+    <div class="flex-1 min-h-0 overflow-y-auto">
+      @for (group of groups(); track group.key) {
+        <div class="flex gap-4 px-7 py-5 border-b border-[var(--border-card)]">
+          <app-avatar [initials]="initials(group.assigneeName)" color="var(--brand-tint)" [size]="36"></app-avatar>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-sm font-semibold text-[var(--ink)]">{{ group.assigneeName }}</div>
+                <div class="text-xs text-[var(--ink-secondary)]">{{ group.roleName }}</div>
+              </div>
+              <span class="text-sm font-semibold text-[var(--ink)] whitespace-nowrap">
+                {{ taskCountLabel(group.tasks.length) }}
+              </span>
+            </div>
+            <ul class="mt-3 mb-0 p-0 list-none flex flex-col gap-1 text-[13px] text-[var(--ink)]">
+              @for (task of group.tasks; track task.taskId) {
+                <li>{{ task.title }} · {{ task.flowFullName }} · due {{ task.dueDate | date: 'EEE d MMM' }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+
+      @if (staysUnassigned().length > 0) {
+        <div class="px-7 py-5 bg-[var(--surface-page)] border-b border-[var(--border-card)]">
+          <span class="ob-summary-label">Stays unassigned</span>
+          <ul class="mt-2 mb-0 p-0 list-none flex flex-col gap-1 text-[13px] text-[var(--ink)]">
+            @for (group of staysUnassigned(); track group.roleName) {
+              <li>
+                @if (group.roleName) {
+                  {{ group.roleName }} · {{ taskCountLabel(group.count) }} · no default person in Responsible Roles
+                } @else {
+                  No role · {{ taskCountLabel(group.count) }} · the task has no responsible role
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-4 px-7 py-5">
+      <p class="m-0 flex-1 min-w-[240px] text-xs text-[var(--ink-secondary)]">
+        Assignees are written onto each task. Flows without remaining gaps leave the Unresolved state.
+      </p>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="px-4 h-9 bg-transparent border-0 text-sm font-semibold text-[var(--ink-secondary)] cursor-pointer hover:text-[var(--ink)] disabled:opacity-50"
+          [disabled]="applying()"
+          (click)="cancel()"
+        >
+          Cancel
+        </button>
+        <button type="button" class="btn btn--primary" [disabled]="applying()" (click)="confirmed.emit()">
+          {{ applying() ? 'Assigning...' : 'Assign ' + taskCountLabel(preview().length) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

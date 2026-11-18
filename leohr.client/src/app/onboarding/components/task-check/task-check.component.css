@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+}
+
+.tc-check {
+  width: 20px;
+  height: 20px;
+}
+
+/* A disabled checkbox keeps its colours, the hint explains why it can't be clicked. */
+.tc-check:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.tc-check--late {
+  border-color: var(--danger-ink);
+}
+
+.tc-check--progress {
+  background: var(--info-ink);
+  border-color: transparent;
+}

@@ -1,0 +1,238 @@
+<div class="ob-content">
+  <a class="ob-back-link" routerLink="/onboarding/flows" [queryParams]="flowsQueryParams">← Flows</a>
+
+  @if (flow(); as flow) {
+    <div class="fo-card fo-hire">
+      <div class="ob-hire-cell">
+        <app-avatar
+          class="fo-avatar"
+          [initials]="initials(flow.fullName)"
+          color="var(--surface-subtle)"
+          [size]="56"
+        ></app-avatar>
+        <div class="page-header__text">
+          <h1 class="page-title">{{ flow.fullName }}</h1>
+          <p class="page-subtitle">
+            @if (flow.position) {
+              {{ flow.position }} ·
+            }
+            @if (flow.level) {
+              {{ levelLabels[flow.level] }} ·
+            }
+            starts {{ flow.startDate | date: 'EEEE d MMM y' }} ·
+            {{ relativeStart(flow.startDate) }}
+          </p>
+          <p class="page-subtitle">
+            Type:
+            @if (flow.onboardingTypeName) {
+              {{ flow.onboardingTypeName }}
+              @if (flow.onboardingTypeIsArchived) {
+                · Archived
+              }
+            } @else {
+              Not set
+            }
+          </p>
+        </div>
+      </div>
+      <div class="fo-hire-side">
+        <div class="fo-responsible" [class.fo-responsible--warning]="personWarning()">
+          <div class="fo-responsible-head">
+            <span class="fo-progress-label">Responsible</span>
+            @if (personWarning()) {
+              <span class="fo-responsible-badge">{{ personBadge() }}</span>
+            }
+          </div>
+          <div class="fo-assignee">
+            @let responsible = flow.responsiblePersonName ?? flow.responsiblePersonId;
+            <app-avatar
+              class="fo-avatar"
+              [initials]="initials(responsible)"
+              color="var(--surface-subtle)"
+              [size]="36"
+            ></app-avatar>
+            <div>
+              <div class="ob-cell-primary">
+                {{ responsible }}
+                @if (isResponsibleMe()) {
+                  (you)
+                }
+              </div>
+              <div class="ob-cell-sub">{{ flow.responsiblePersonRoleName }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="fo-progress">
+          <div>
+            <div class="fo-progress-label">Tasks done</div>
+            <div class="fo-progress-count">{{ doneCount() }} / {{ flow.tasks.length }}</div>
+          </div>
+          <div
+            class="fo-ring"
+            role="img"
+            [attr.aria-label]="percent() + '% of tasks done'"
+            [style.background]="'conic-gradient(var(--brand-end) ' + percent() + '%, var(--border-card) 0)'"
+          >
+            <span class="fo-ring-inner">{{ percent() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @for (banner of banners(); track banner.kind) {
+      <div class="fo-banner" role="alert">
+        <div class="fo-banner-body">
+          <div class="fo-banner-head">
+            <span class="ob-attention ob-attention--unresolved">Action needed</span>
+            <span class="fo-banner-title">{{ banner.title }}</span>
+          </div>
+          <p class="fo-banner-text">{{ banner.text }}</p>
+        </div>
+        <div class="fo-banner-buttons">
+          <button type="button" class="fo-banner-dismiss" (click)="dismiss(banner.kind)">Dismiss</button>
+          @if (isOnboardingAdmin()) {
+            @if (banner.action === 'change') {
+              <button type="button" class="btn btn--dark fo-banner-action" (click)="changeDialogOpen.set(true)">
+                Change responsible
+              </button>
+            } @else {
+              <a class="btn btn--dark fo-banner-action" routerLink="/onboarding/settings">Open Responsible Roles</a>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    @if (changeDialogOpen()) {
+      <app-change-responsible-dialog
+        [flow]="flow"
+        (changed)="onResponsibleChanged()"
+        (dismissed)="changeDialogOpen.set(false)"
+      ></app-change-responsible-dialog>
+    }
+
+    @if (unassignedRows().length > 0) {
+      <div class="fo-banner" role="alert">
+        <div class="fo-banner-body">
+          <div class="fo-banner-head">
+            <span class="ob-attention ob-attention--unresolved">Created — Unresolved</span>
+            <span class="fo-banner-title">{{ bannerTitle() }}</span>
+          </div>
+          <p class="fo-banner-text">
+            The flow was created in full. These tasks have no owner because their responsible role has no default
+            person, so they will not appear in anyone's My Tasks until someone is assigned. The status clears itself
+            once every task has an assignee.
+          </p>
+          <ul class="fo-banner-list">
+            @for (row of unassignedRows(); track row.id) {
+              <li>
+                {{ row.title }} · {{ row.responsibleRoleName ?? 'No role' }} · due {{ row.dueDate | date: 'EEE d MMM' }}
+              </li>
+            }
+          </ul>
+        </div>
+        <a class="btn btn--dark fo-banner-action" routerLink="/onboarding/needs-attention">Assign owners</a>
+      </div>
+    }
+
+    @for (group of phaseGroups(); track group.phase; let index = $index) {
+      <section class="fo-card fo-phase" [attr.aria-label]="group.label">
+        <header class="fo-phase-head">
+          <span class="fo-phase-number">{{ index + 1 }}</span>
+          <h2 class="fo-phase-name">{{ group.label }}</h2>
+          <span class="fo-phase-dates">
+            {{ group.firstDue | date: 'EEE d MMM' }}
+            @if (group.lastDue !== group.firstDue) {
+              → {{ group.lastDue | date: 'EEE d MMM' }}
+            }
+          </span>
+          <span class="fo-phase-count">{{ group.doneCount }} of {{ group.rows.length }} done</span>
+        </header>
+
+        @for (row of group.rows; track row.id) {
+          <div
+            class="fo-task"
+            [id]="'task-' + row.id"
+            [class.ob-row--unresolved]="row.isUnassigned"
+            [class.ob-task-row--highlighted]="row.id === highlightedTaskId()"
+          >
+            <app-task-check
+              [taskId]="row.id"
+              [title]="row.title"
+              [status]="row.status"
+              [isStarted]="row.status === Status.InProgress"
+              [assigneeId]="row.assigneeId"
+              [hasFields]="row.hasFields"
+              (open)="openTask(row.id)"
+              (completed)="onCompleted(row.id)"
+            ></app-task-check>
+
+            <div class="fo-task-main">
+              <div class="ob-cell-primary fo-task-title" [class.fo-task-title--done]="row.status === Status.Done">
+                <a class="ob-task-link" [routerLink]="['/onboarding/tasks', row.id]" [state]="taskState">{{
+                  row.title
+                }}</a>
+              </div>
+              @if (row.description) {
+                <div class="ob-cell-sub fo-task-description">{{ row.description }}</div>
+              }
+            </div>
+
+            <div class="fo-assignee">
+              @if (row.assigneeId) {
+                @let assignee = row.assigneeName ?? row.assigneeId;
+                <app-avatar
+                  class="fo-avatar"
+                  [initials]="initials(assignee)"
+                  color="var(--surface-subtle)"
+                  [size]="36"
+                ></app-avatar>
+                <div>
+                  <div class="ob-cell-primary">{{ assignee }}</div>
+                  @if (row.responsibleRoleName) {
+                    <div class="ob-cell-sub">{{ row.responsibleRoleName }}</div>
+                  }
+                </div>
+              } @else {
+                <app-avatar class="fo-avatar" initials="?" color="var(--surface-subtle)" [size]="36"></app-avatar>
+                <div class="flex min-w-0 flex-1 flex-col gap-1">
+                  <app-task-assignee-select
+                    [taskId]="row.id"
+                    [taskTitle]="row.title"
+                    [roleKey]="row.responsibleRoleKey"
+                    (assigned)="onAssigned(row.id, $event)"
+                  ></app-task-assignee-select>
+                  @if (row.responsibleRoleName) {
+                    <div class="ob-cell-sub">{{ row.responsibleRoleName }}</div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="fo-due">
+              <div class="ob-cell-primary fo-due-date">{{ row.dueDate | date: 'EEE d MMM' }}</div>
+              <div class="ob-cell-sub">{{ row.dueRule }}</div>
+            </div>
+
+            <div class="fo-milestone ob-cell-sub">{{ row.milestoneName }}</div>
+
+            <div class="fo-status">
+              <span class="ob-attention" [class]="row.statusClass">{{ row.statusLabel }}</span>
+            </div>
+          </div>
+        }
+      </section>
+    } @empty {
+      <div class="fo-card">
+        <p class="emp-table-empty">This flow has no tasks.</p>
+      </div>
+    }
+  } @else if (loading()) {
+    <p class="loading-text" role="status">Loading onboarding flow...</p>
+  } @else if (loadFailed()) {
+    <div class="fo-card fo-error">
+      <p class="loading-text">The onboarding flow could not be loaded.</p>
+      <button type="button" class="btn btn--secondary" (click)="reload()">Try again</button>
+    </div>
+  }
+</div>

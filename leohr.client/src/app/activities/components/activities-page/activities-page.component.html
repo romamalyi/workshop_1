@@ -1,0 +1,91 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Activity Catalog</h1>
+      <p class="page-subtitle">Manage activities available for employee growth plans</p>
+    </div>
+    <div class="page-header__actions">
+      <label class="toggle-label">
+        <input type="checkbox" [checked]="showInactive$ | async" (change)="showInactive$.next(!showInactive$.value)" />
+        <span>Show inactive</span>
+      </label>
+      <button class="btn btn--primary" (click)="openCreate()">+ Add Activity</button>
+    </div>
+  </div>
+
+  <div class="category-filter">
+    <button
+      class="category-filter__chip"
+      [class.active]="(categoryFilter$ | async) === null"
+      (click)="setCategoryFilter(null)"
+    >
+      All
+    </button>
+    @for (c of allCategories; track c) {
+      <button
+        class="category-filter__chip"
+        [class.active]="(categoryFilter$ | async) === c"
+        (click)="setCategoryFilter(c)"
+      >
+        {{ c | categoryLabel }}
+      </button>
+    }
+  </div>
+
+  @for (group of groups$ | async; track group.key) {
+    <div class="catalog-section">
+      <button type="button" class="catalog-section__header" (click)="toggleCollapse(group.key)">
+        <span class="catalog-section__title">{{ group.label }}</span>
+        <span class="catalog-section__collapse">{{ group.collapsed ? '▶' : '▼' }}</span>
+      </button>
+
+      @if (!group.collapsed) {
+        <div class="catalog-list">
+          @for (a of group.activities; track a.id) {
+            <div class="catalog-row" [class.inactive]="!a.isActive">
+              <span class="catalog-row__name">{{ a.name }}</span>
+              <span class="catalog-row__meta">{{ a.withinPeriod | periodLabel }}</span>
+              <span class="catalog-row__badge">{{ a.points }} pts</span>
+
+              @if (!a.isActive) {
+                <span class="badge badge--neutral">Inactive</span>
+              }
+
+              <div class="catalog-row__actions">
+                @if (a.isActive) {
+                  <button class="btn btn--secondary btn--sm" (click)="openEdit(a)">Edit</button>
+                  <button
+                    class="btn btn--danger btn--sm btn--icon"
+                    tooltip="Delete"
+                    aria-label="Delete"
+                    (click)="confirmDelete(a)"
+                  >
+                    <app-action-icon name="trash" />
+                  </button>
+                } @else {
+                  <button class="btn btn--secondary btn--sm" (click)="reactivate(a)">Reactivate</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (modalOpen$ | async) {
+  <app-activity-modal [activity]="editingActivity" (save)="onSave($event)" (cancel)="closeModal()">
+  </app-activity-modal>
+}
+
+@if (deletingActivity$ | async; as deletingActivity) {
+  <app-confirm-dialog
+    title="Delete activity?"
+    [message]="'Are you sure you want to delete &quot;' + deletingActivity.name + '&quot;?'"
+    confirmLabel="Delete"
+    (confirm)="executeDelete()"
+    (dismissed)="deletingActivity$.next(null)"
+  >
+  </app-confirm-dialog>
+}

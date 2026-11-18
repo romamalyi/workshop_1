@@ -1,0 +1,51 @@
+<div class="emp-filter-dropdown">
+  <button
+    class="emp-filter-trigger"
+    [class.emp-filter-trigger--active]="isFiltered()"
+    (click)="toggleOpen($event)"
+    type="button"
+  >
+    <span>{{ label() }}</span>
+    @if (isFiltered()) {
+      <span class="emp-filter-badge">{{ selected().length }}</span>
+    }
+    <svg
+      class="emp-filter-chevron"
+      [class.emp-filter-chevron--open]="open()"
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+    >
+      <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+  @if (open()) {
+    <div
+      class="emp-filter-panel"
+      [style.top]="panelStyle()?.top"
+      [style.left]="panelStyle()?.left"
+      [style.width]="panelStyle()?.width"
+    >
+      <input
+        class="emp-filter-search"
+        [placeholder]="searchPlaceholder()"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+      <div class="emp-filter-list">
+        <label class="emp-filter-item emp-filter-item--all">
+          <input type="checkbox" [checked]="isAllSelected()" (change)="toggleAll()" />
+          <span>All</span>
+        </label>
+        @for (option of shownOptions(); track option) {
+          <label class="emp-filter-item">
+            <input type="checkbox" [checked]="isSelected(option)" (change)="toggle(option)" />
+            <span>{{ option }}</span>
+          </label>
+        }
+      </div>
+    </div>
+  }
+</div>

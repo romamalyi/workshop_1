@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+.pa-table {
+  --table-min-width: 940px;
+}
+
+.pa-employee {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+}
+
+.pa-employee:hover .data-table__primary {
+  text-decoration: underline;
+}
+
+.pa-role-arrow {
+  margin: 0 4px;
+  color: var(--success-ink);
+}
+
+.pa-role-to {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pa-note {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

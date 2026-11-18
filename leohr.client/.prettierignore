@@ -1,0 +1,23 @@
+# Build / deps
+dist
+node_modules
+.angular
+coverage
+out-tsc
+
+# Generated / lock
+package-lock.json
+
+# Assets
+public
+src/assets
+*.svg
+*.otf
+*.ico
+*.png
+*.jpg
+*.webp
+
+# Misc
+*.min.js
+*.min.css

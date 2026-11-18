@@ -1,0 +1,187 @@
+:host {
+  display: block;
+  padding-right: 12px;
+}
+
+.ot-empty-library {
+  max-width: 520px;
+  margin: 48px auto 0;
+  padding: 32px;
+  text-align: center;
+  background: var(--surface);
+  border: 0.5px solid var(--border-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.ot-empty-library__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ot-empty-library__text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.ot-empty-library__cta {
+  display: block;
+  margin-left: auto;
+  width: fit-content;
+}
+
+.ot-phase {
+  margin-top: 20px;
+  background: var(--surface);
+  border: 0.5px solid var(--border-card);
+  border-radius: 12px;
+  overflow-x: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  box-shadow: var(--shadow-card);
+}
+
+.ot-phase__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface-inverse);
+}
+
+.ot-phase__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.ot-phase__hint {
+  font-size: 12px;
+  color: var(--neutral-bg);
+}
+
+.ot-phase__count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neutral-bg);
+}
+
+.ot-phase__empty {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.ot-list {
+  --ot-cols: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1.4fr) 150px max-content max-content 44px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 1100px;
+}
+
+.ot-row {
+  display: grid;
+  grid-template-columns: var(--ot-cols);
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-card);
+  transition: background 0.1s;
+  cursor: pointer;
+}
+
+.ot-row:last-child {
+  border-bottom: none;
+}
+
+.ot-row:hover {
+  background: var(--surface-hover);
+}
+
+.ot-row--inactive .ot-row__title,
+.ot-row--inactive .ot-cell {
+  color: var(--ink-secondary);
+}
+
+.ot-row__title {
+  min-width: 0;
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ot-row:hover .ot-row__title {
+  text-decoration: underline;
+}
+
+.ot-row:focus-visible {
+  outline: 2px solid var(--brand-end);
+  outline-offset: -2px;
+}
+
+.ot-cell {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ot-cell--role {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ot-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--bg-input);
+  color: var(--ink-secondary);
+}
+
+.ot-chip--optional {
+  background: var(--warning-subtle);
+  color: var(--warning-ink);
+}
+
+.ot-duplicate-btn {
+  padding-top: 2px;
+}
+
+.ot-duplicate-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ot-row > .toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

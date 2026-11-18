@@ -1,0 +1,62 @@
+<div class="modal-backdrop" appDialog (dialogClose)="close()">
+  <div class="modal-box modal-box--lg" role="dialog" aria-label="Add templates">
+    <div>
+      <h2 class="modal-title">Add templates</h2>
+      <p class="m-0 text-sm text-(--ink-secondary)">
+        {{ templates().length }} active {{ templates().length === 1 ? 'template' : 'templates' }} can still be added to
+        {{ typeName().trim() || 'Untitled type' }}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <input
+        type="search"
+        class="min-w-0 flex-1 rounded-lg border border-(--border-card) px-3 py-2 text-sm outline-none focus:border-(--ink)"
+        placeholder="Search templates by name, phase or role"
+        aria-label="Search templates by name, phase or role"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+      <button
+        type="button"
+        class="btn btn--secondary shrink-0"
+        [disabled]="filtered().length === 0"
+        (click)="toggleAll()"
+      >
+        {{ allListedSelected() ? 'Clear selection' : 'Select all missing' }}
+      </button>
+    </div>
+
+    <ul class="-mx-6 m-0 max-h-[360px] min-h-[120px] list-none overflow-y-auto p-0">
+      @for (template of filtered(); track template.id) {
+        <li class="border-b border-(--border-card) last:border-b-0 has-checked:bg-(--brand-tint)">
+          <label class="flex cursor-pointer items-center gap-3 px-6 py-2.5">
+            <input type="checkbox" [checked]="selected().has(template.id)" (change)="toggle(template.id)" />
+            <span class="min-w-0 flex-1">
+              <span class="block text-[15px] font-semibold text-(--ink)">{{ template.title }}</span>
+              <span class="block text-xs text-(--ink-secondary)">
+                {{ phaseLabels[template.phase] }} ·
+                {{ formatShortDueRule(template.dueOffsetDays, template.dueDirection, template.dueAnchor) }}
+              </span>
+            </span>
+            <span class="shrink-0 text-sm font-semibold text-(--ink)">
+              {{ template.responsibleRoleName ?? '—' }}
+            </span>
+          </label>
+        </li>
+      } @empty {
+        <li class="py-8 text-center text-sm text-(--ink-secondary)">No templates match your search</li>
+      }
+    </ul>
+
+    <div class="modal-actions items-center">
+      <span class="mr-auto text-sm text-(--ink-secondary)">
+        {{ selected().size > 0 ? selected().size + ' selected' : 'Pick one or more templates to add' }}
+      </span>
+      <button type="button" class="btn btn--secondary" (click)="close()">Cancel</button>
+      <button type="button" class="btn btn--primary" [disabled]="selected().size === 0" (click)="add()">
+        Add templates
+      </button>
+    </div>
+  </div>
+</div>

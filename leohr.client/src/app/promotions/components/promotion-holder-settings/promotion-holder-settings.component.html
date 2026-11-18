@@ -1,0 +1,86 @@
+@if (loading()) {
+  <p class="loading-text" role="status">Loading the default promotion holder…</p>
+} @else if (loadFailed()) {
+  <p class="error-text" role="alert">Couldn't load the default promotion holder. Reload the page to try again.</p>
+} @else {
+  <div class="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6 max-lg:grid-cols-1">
+    <section class="detail-card" aria-labelledby="holder-settings-title">
+      <div class="flex flex-col gap-1.5">
+        <h2 id="holder-settings-title" class="detail-card__title">Default promotion holder</h2>
+        <p class="m-0 text-sm text-(--ink-secondary)">
+          The person pre-selected as the holder when you add a promotion.
+        </p>
+      </div>
+
+      <div class="border-t border-(--divider)" role="table" aria-label="Default promotion holder">
+        <div
+          class="grid grid-cols-[1fr_340px] items-center gap-4 border-b border-(--divider) py-3 max-md:grid-cols-1"
+          role="row"
+        >
+          <span class="text-xs font-bold tracking-[0.04em] text-(--ink-secondary) uppercase" role="columnheader">
+            Setting
+          </span>
+          <span class="text-xs font-bold tracking-[0.04em] text-(--ink-secondary) uppercase" role="columnheader">
+            Default person
+          </span>
+        </div>
+
+        <div
+          class="grid grid-cols-[1fr_340px] items-center gap-4 border-b border-(--divider) py-3 max-md:grid-cols-1"
+          role="row"
+        >
+          <div class="flex flex-col gap-0.5" role="cell">
+            <span class="text-base font-semibold text-(--ink)">Promotion holder</span>
+            <span class="text-[13px] text-(--ink-secondary)">Used for promotions you add</span>
+          </div>
+          <app-search-select
+            class="block"
+            role="cell"
+            label="Default promotion holder"
+            placeholder="Not set"
+            [options]="holderOptions()"
+            [selectedId]="holderId() || null"
+            [selectedLabel]="holderName() || null"
+            [clearable]="false"
+            [compact]="true"
+            (picked)="selectHolder($event)"
+          />
+        </div>
+      </div>
+
+      <footer class="flex items-center justify-between">
+        <span class="text-sm font-semibold text-(--warning-ink)">
+          @if (isDirty()) {
+            <span role="status">Unsaved changes</span>
+          }
+        </span>
+        <div class="flex gap-3">
+          <button type="button" class="btn btn--secondary" [disabled]="!isDirty() || saving()" (click)="reset()">
+            Reset
+          </button>
+          <button type="button" class="btn btn--primary" [disabled]="!isDirty() || saving()" (click)="save()">
+            Save Changes
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="flex flex-col gap-4" aria-label="About the default holder">
+      <article class="flex flex-col gap-1.5 rounded-2xl border border-(--info-border) bg-(--info-bg) px-5 py-4">
+        <h3 class="m-0 text-base font-bold text-(--info-ink)">Your own default</h3>
+        <p class="m-0 text-sm text-(--ink-soft)">
+          Each HR user picks their own holder. Changing yours doesn't change anyone else's.
+        </p>
+      </article>
+      <article class="flex flex-col gap-2 rounded-2xl border border-(--border-card) bg-(--surface) px-5 py-4">
+        <span class="text-xs font-bold tracking-[0.04em] text-(--ink-secondary) uppercase">Where it's used</span>
+        <p class="m-0 text-sm text-(--ink-soft)">
+          Add Promotion pre-selects this person as the holder. You can still pick someone else for a single promotion.
+        </p>
+        <p class="m-0 text-sm text-(--ink-soft)">
+          When you close a promotion, the next one created for that employee gets this holder too.
+        </p>
+      </article>
+    </aside>
+  </div>
+}

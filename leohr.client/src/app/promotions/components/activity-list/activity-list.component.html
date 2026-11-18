@@ -1,0 +1,58 @@
+@if (activities().length > 0) {
+  <div class="activity-group-title">{{ title() }}</div>
+  <div class="data-table activity-group">
+    @for (a of activities(); track a.employeeActivityId) {
+      <div class="data-table__row activity-row" [class.activity-row--pending]="isPending()">
+        <span class="chip" [style.background]="categoryBackground(a.category)">
+          {{ a.category | categoryLabel }}
+        </span>
+
+        <div class="data-table__stack">
+          <span class="data-table__primary activity-name">{{ a.name }}</span>
+          @if (a.note) {
+            <span class="data-table__sub activity-note">{{ a.note }}</span>
+          }
+        </div>
+        <span class="data-table__muted">{{ a.withinPeriod | periodLabel }}</span>
+
+        <span class="badge" [class]="statusBadgeClass()">
+          {{ statusText() }}
+        </span>
+
+        <span class="data-table__muted">{{ a.accomplishedOn ? (a.accomplishedOn | date: 'dd MMM yyyy') : '' }}</span>
+
+        <span class="data-table__strong" [class.pts-achieved]="isEarned()" [class.pts-muted]="!isEarned()">
+          {{ a.pointsSnapshot }} pts
+        </span>
+
+        <div class="data-table__actions">
+          @if (canReport(a)) {
+            <button class="btn btn--secondary btn--sm" (click)="markReported.emit(a.employeeActivityId)">
+              Mark as done
+            </button>
+          }
+          @if (canApprove(a)) {
+            <button class="btn btn--secondary btn--sm" (click)="approve.emit(a.employeeActivityId)">
+              {{ approveLabel() }}
+            </button>
+          }
+          @if (canRevert(a)) {
+            <button type="button" class="btn btn--secondary btn--sm" (click)="revert.emit(a.employeeActivityId)">
+              Revert approval
+            </button>
+          }
+          @if (canRemove(a)) {
+            <button
+              class="btn btn--danger btn--sm btn--icon"
+              tooltip="Remove"
+              aria-label="Remove"
+              (click)="remove.emit(a.employeeActivityId)"
+            >
+              <app-action-icon name="trash" />
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,366 @@
+.ofw-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+:host span {
+  color: var(--ink, #191919);
+}
+
+/* ".ofw-badge" alone would lose to the ":host span" rule above on specificity. */
+:host span.ofw-badge {
+  color: var(--success-ink);
+}
+
+/* Angular component styles are encapsulated per component, so the shared "os-*" look from the
+   settings/templates pages must be redefined here rather than assumed to apply. */
+.os-card {
+  background: var(--surface, #ffffff);
+  border: 0.5px solid var(--border-card, #e2e8f0);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+.os-card-header {
+  margin-bottom: 12px;
+}
+
+.os-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink, #1e293b);
+  margin: 0 0 6px;
+}
+
+.os-card-desc {
+  font-size: 13px;
+  color: var(--ink-secondary, #64748b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.os-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+}
+
+.os-footer-btns {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.os-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-card, #cbd5e1);
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: var(--ink, #1e293b);
+  outline: none;
+}
+
+.os-select--muted {
+  color: var(--ink-secondary);
+}
+
+/* <option> inherits the select colour; reset it so the muted colour does not carry into the open list. */
+.os-select option {
+  color: var(--ink);
+}
+
+.os-help-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-secondary, #94a3b8);
+  margin-bottom: 8px;
+}
+
+/* "Optional templates" and "Employment" keep the muted section-label look. */
+:host span.os-help-label:not(.ofw-preview-header) {
+  color: var(--ink-secondary, #94a3b8);
+}
+
+/* Negative margins stretch the banner over the card's 16px padding. */
+:host span.ofw-preview-header {
+  margin: -16px -16px 8px;
+  padding: 12px 16px;
+  border-radius: 12px 12px 0 0;
+  background: var(--surface-inverse);
+  color: #fff;
+}
+
+:host span.field-error {
+  color: var(--danger-ink);
+}
+
+.ofw-note {
+  align-self: center;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.ofw-note strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ofw-note--success {
+  border-left: 3px solid var(--brand-end);
+  background: color-mix(in srgb, var(--brand-end) 15%, #fff);
+}
+
+.ofw-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ofw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.ofw-field input[type='text'],
+.ofw-field input[type='date'] {
+  padding: 8px 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.ofw-field input::placeholder {
+  color: var(--ink-secondary);
+}
+
+/* An empty date shows its dd/mm/yyyy mask instead of a placeholder. */
+.ofw-field input[type='date'].ofw-date-empty {
+  color: var(--ink-secondary);
+}
+
+.ofw-field--required > span:first-child::after {
+  content: 'Required';
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid var(--danger-bg);
+  border-radius: 20px;
+  background: var(--danger-bg);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--danger-ink);
+}
+
+.ofw-field input.ofw-invalid {
+  border-color: var(--danger-ink);
+  outline: 1px solid var(--danger-ink);
+}
+
+.ofw-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-secondary);
+}
+
+.ofw-toggle-group {
+  display: flex;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.ofw-toggle {
+  padding: 8px 14px;
+  border: 0;
+  background: var(--bg-input);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ink-secondary);
+}
+
+.ofw-toggle--active {
+  background: var(--ink, #191919);
+  color: #fff;
+}
+
+.ofw-divider {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-card);
+}
+
+.ofw-optional-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.ofw-optional-row--warning {
+  background: var(--warning-subtle);
+}
+
+.ofw-optional-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ofw-optional-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ofw-optional-desc {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ofw-badge {
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--brand-end) 40%, #fff);
+  background: color-mix(in srgb, var(--brand-end) 15%, #fff);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ofw-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--border-card);
+  cursor: pointer;
+}
+
+.ofw-switch--on {
+  background: var(--brand-end, #24b400);
+}
+
+.ofw-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s ease;
+}
+
+.ofw-switch--on .ofw-switch-knob {
+  left: 18px;
+}
+
+.ofw-override-warning {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--warning);
+  border-radius: 10px;
+  background: var(--warning-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ofw-required-hint {
+  font-size: 12px;
+  color: var(--danger-ink);
+}
+
+.ofw-preview {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.ofw-preview-total {
+  margin: 6px 0 10px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.ofw-preview-total span {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.ofw-phase-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-card);
+  font-size: 13px;
+}
+
+.ofw-phase-dates {
+  margin-top: 2px;
+  min-height: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-secondary);
+}
+
+.ofw-preview-note {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-card);
+}
+
+.ofw-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.ofw-summary dt {
+  color: var(--ink-secondary);
+}
+
+.ofw-summary dd {
+  margin: 0;
+  font-weight: 600;
+}

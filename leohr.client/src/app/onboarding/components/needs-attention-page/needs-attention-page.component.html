@@ -1,0 +1,99 @@
+<div class="ob-content">
+  <div class="page-header flex-wrap gap-4">
+    <div class="page-header__text">
+      <h1 class="page-title">Unassigned tasks</h1>
+      <p class="page-subtitle">
+        Unassigned tasks across every flow. Flow creation was not blocked — these need an owner before they can be
+        worked.
+      </p>
+    </div>
+    <div class="page-header__actions flex-wrap">
+      <button type="button" class="btn btn--secondary" routerLink="/onboarding/settings">Open Responsible Roles</button>
+      @if (!loading() && tasks().length > 0) {
+        <button type="button" class="btn btn--dark" [disabled]="checking()" (click)="recheck()">
+          <span aria-hidden="true">⟳</span>
+          {{ checking() ? 'Checking...' : 'Recheck mappings' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-text" role="status">Loading unassigned tasks...</p>
+  } @else {
+    @if (tasks().length === 0) {
+      <div class="ob-info-card text-center py-10">
+        <h2 class="m-0 text-base font-semibold text-[#1a1a1a]">No unassigned tasks</h2>
+        <p>Every task on every flow has an owner. New entries appear here when a role has no default person.</p>
+      </div>
+    } @else {
+      <div class="data-table" role="table" style="--table-cols: 2fr 1.6fr 1.2fr 1fr 1.6fr; --table-min-width: 720px">
+        <div class="data-table__head" role="row">
+          <span class="data-table__th" role="columnheader">Task</span>
+          <span class="data-table__th" role="columnheader">Flow</span>
+          <span class="data-table__th" role="columnheader">Role</span>
+          <span class="data-table__th" role="columnheader">Due</span>
+          <span class="data-table__th" role="columnheader">Assign to</span>
+        </div>
+        @for (task of tasks(); track task.taskId) {
+          <div class="data-table__row ob-task-row ob-row--unresolved" role="row">
+            <div class="data-table__cell" role="cell">
+              <div class="ob-cell-primary font-semibold">{{ task.title }}</div>
+              <div class="ob-cell-sub">{{ phaseLabels[task.phase] }}</div>
+            </div>
+            <div class="data-table__cell" role="cell">
+              <a class="ob-hire-cell no-underline" [routerLink]="['/onboarding/flows', task.flowId]">
+                <app-avatar
+                  [initials]="initials(task.flowFullName)"
+                  [color]="avatarColor(task.flowId)"
+                  [size]="36"
+                ></app-avatar>
+                <span class="ob-cell-primary hover:underline">{{ task.flowFullName }}</span>
+              </a>
+            </div>
+            <div class="data-table__cell ob-cell-primary" role="cell">{{ task.responsibleRoleName ?? '—' }}</div>
+            <div class="data-table__cell" role="cell">{{ task.dueDate | date: 'EEE d MMM' }}</div>
+            <div class="data-table__cell" role="cell">
+              <app-task-assignee-select
+                [taskId]="task.taskId"
+                [taskTitle]="task.title"
+                [roleKey]="task.responsibleRoleKey"
+              ></app-task-assignee-select>
+            </div>
+          </div>
+        }
+        <p class="ob-table-footnote">
+          Assigning here writes the person onto that one task. Mapping the role in Responsible Roles resolves every task
+          waiting on it.
+        </p>
+      </div>
+    }
+
+    <div class="ob-info-grid">
+      <div class="ob-info-card">
+        <span class="ob-summary-label">Why a task lands here</span>
+        <p>
+          Its template points at a responsible role with no default person. Generation never blocks and never
+          substitutes an owner, so the task is created genuinely unassigned.
+        </p>
+      </div>
+      <div class="ob-info-card">
+        <span class="ob-summary-label">How the status clears</span>
+        <p>
+          Created — Unresolved is computed, not stored. The last assignment on a flow removes the banner, the row
+          highlight and this entry at once.
+        </p>
+      </div>
+    </div>
+  }
+</div>
+
+@if (recheckPreview(); as preview) {
+  <app-recheck-mappings-dialog
+    [preview]="preview"
+    [tasks]="tasks()"
+    [applying]="applying()"
+    (confirmed)="confirmRecheck()"
+    (cancelled)="recheckPreview.set(null)"
+  ></app-recheck-mappings-dialog>
+}

@@ -1,0 +1,51 @@
+<div class="dp-wrap" (blur)="close()" tabindex="-1">
+  <!-- Trigger -->
+  <button class="dp-trigger input" type="button" (click)="toggle()">
+    <span [class.dp-trigger-placeholder]="!value()">
+      {{ displayValue() || placeholder() }}
+    </span>
+    <svg class="dp-trigger-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.4" />
+      <path d="M5 1v3M11 1v3M2 7h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <!-- Panel -->
+  @if (isOpen()) {
+    <div class="dp-panel" [class.dp-panel--up]="openUpward()" (mousedown)="$event.preventDefault()">
+      <div class="dp-header">
+        <button class="dp-nav-btn" type="button" (click)="prevMonth()">&#8249;</button>
+        <span class="dp-month-label">{{ monthLabel() }}</span>
+        <button class="dp-nav-btn" type="button" (click)="nextMonth()">&#8250;</button>
+      </div>
+
+      <div class="dp-grid">
+        @for (d of DAY_NAMES; track d) {
+          <div class="dp-day-name">{{ d }}</div>
+        }
+
+        @for (week of weeks(); track $index) {
+          @for (day of week; track $index) {
+            <button
+              type="button"
+              class="dp-cell"
+              [class.dp-cell--empty]="!day"
+              [class.dp-cell--today]="isToday(day)"
+              [class.dp-cell--selected]="isSelected(day)"
+              [disabled]="isDisabled(day)"
+              (click)="select(day)"
+            >
+              {{ day?.getDate() }}
+            </button>
+          }
+        }
+      </div>
+
+      @if (value()) {
+        <div class="dp-footer">
+          <button class="dp-clear-btn" type="button" (click)="clear()">Clear</button>
+        </div>
+      }
+    </div>
+  }
+</div>

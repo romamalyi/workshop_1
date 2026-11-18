@@ -1,0 +1,11 @@
+<lbt-navigation
+  appName="LeoHR"
+  homePageLink="/"
+  [user]="navUser()"
+  [env]="navigationEnv"
+  [modules]="modules()"
+  (signIn)="signIn()"
+  (signOut)="signOut()"
+>
+  <router-outlet />
+</lbt-navigation>

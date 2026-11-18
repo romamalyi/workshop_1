@@ -1,0 +1,28 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancel.emit()">
+  <div class="modal-box modal-box--overflow-visible">
+    <div class="modal-header">
+      <h2 class="modal-title">Approve activity</h2>
+      @if (activityName()) {
+        <p class="modal-activity">{{ activityName() }}</p>
+      }
+      @if (note()) {
+        <p class="modal-body m-0 whitespace-pre-line [overflow-wrap:anywhere]">
+          <span class="mr-1 font-semibold">Note:</span><span class="italic">{{ note() }}</span>
+        </p>
+      }
+    </div>
+    <div class="form-field">
+      <label>Date accomplished <span class="field-required">*</span></label>
+      <app-date-picker disableFuture [value]="date()" (valueChange)="date.set($event)" />
+      @if (isFutureDate()) {
+        <span class="field-error">Date accomplished cannot be in the future.</span>
+      }
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!date() || isFutureDate()" (click)="confirm.emit(date())">
+        Approve
+      </button>
+    </div>
+  </div>
+</div>

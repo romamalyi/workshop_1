@@ -1,0 +1,126 @@
+@let settings = reminders();
+@let dirty = isDirty();
+
+@if (remindersResource.isLoading() && !settings) {
+  <p class="loading-text" role="status">Loading reminder settings...</p>
+}
+
+@if (remindersResource.error()) {
+  <p class="error-text" role="alert">Failed to load reminder settings.</p>
+}
+
+@if (settings) {
+  <div class="os-layout">
+    <section class="os-card" aria-labelledby="reminders-heading">
+      <header class="os-card-header">
+        <h2 id="reminders-heading" class="os-card-title">Reminders</h2>
+        <p class="os-card-desc">
+          When HR and task assignees are reminded about onboarding work. Applies to every flow.
+        </p>
+      </header>
+
+      <div class="os-table" role="table" aria-label="Reminder settings">
+        <div class="os-tr-row" role="row">
+          <div class="os-role-info" role="cell">
+            <span id="days-before-label" class="os-role-name"
+              >Days before start to notify <span class="os-inactive-badge">No effect yet</span></span
+            >
+            <span class="os-role-hint">How many days before a new hire's start date reminders go out</span>
+          </div>
+          <div class="os-role-actions" role="cell">
+            <select
+              class="os-select"
+              aria-labelledby="days-before-label"
+              [ngModel]="settings.daysBeforeStartToNotify"
+              (ngModelChange)="update({ daysBeforeStartToNotify: $event })"
+            >
+              @for (days of dayOptions; track days) {
+                <option [ngValue]="days">{{ days }} days</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="os-tr-row" role="row">
+          <div class="os-role-info" role="cell">
+            <span id="weekly-digest-label" class="os-role-name"
+              >Weekly digest of pending steps <span class="os-inactive-badge">No effect yet</span></span
+            >
+            <span class="os-role-hint">A weekly summary of onboarding steps that are still open</span>
+          </div>
+          <div class="os-role-actions" role="cell">
+            <button
+              type="button"
+              role="switch"
+              class="toggle-btn"
+              aria-labelledby="weekly-digest-label"
+              [class.toggle-btn--on]="settings.weeklyDigestEnabled"
+              [attr.aria-checked]="settings.weeklyDigestEnabled"
+              (click)="update({ weeklyDigestEnabled: !settings.weeklyDigestEnabled })"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="os-tr-row" role="row">
+          <div class="os-role-info" role="cell">
+            <span id="overdue-alerts-label" class="os-role-name"
+              >Alert on overdue tasks <span class="os-inactive-badge">No effect yet</span></span
+            >
+            <span class="os-role-hint">Alert the assignee when a task passes its due date</span>
+          </div>
+          <div class="os-role-actions" role="cell">
+            <button
+              type="button"
+              role="switch"
+              class="toggle-btn"
+              aria-labelledby="overdue-alerts-label"
+              [class.toggle-btn--on]="settings.overdueAlertsEnabled"
+              [attr.aria-checked]="settings.overdueAlertsEnabled"
+              (click)="update({ overdueAlertsEnabled: !settings.overdueAlertsEnabled })"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="os-card-footer">
+        <div class="os-unsaved">
+          @if (dirty) {
+            <span role="status">Unsaved changes</span>
+          }
+        </div>
+        <div class="os-footer-btns">
+          <button
+            type="button"
+            class="btn btn--secondary"
+            aria-label="Reset changes"
+            [disabled]="!dirty"
+            (click)="reset()"
+          >
+            Reset
+          </button>
+          <button type="button" class="btn btn--primary" aria-label="Save changes" [disabled]="!dirty" (click)="save()">
+            Save Changes
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="os-help-column" aria-label="Informational help cards">
+      <article class="os-help-card os-help-card--blue">
+        <h3 class="os-help-title">Not sent yet</h3>
+        <p class="os-help-text">
+          Reminder emails aren't built yet. These values are saved and take effect once they are.
+        </p>
+      </article>
+
+      <article class="os-help-card">
+        <span class="os-help-label">Company-wide</span>
+        <p class="os-help-text">One set of values for everyone, used for every onboarding flow.</p>
+      </article>
+    </aside>
+  </div>
+}

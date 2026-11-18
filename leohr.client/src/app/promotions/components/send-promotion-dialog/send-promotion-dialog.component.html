@@ -1,0 +1,130 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancelled.emit()">
+  <div class="modal-box modal-box--lg" role="dialog" aria-modal="true" aria-labelledby="send-promotion-title">
+    <div class="modal-header">
+      <div id="send-promotion-title" class="modal-title">Promotion email preview</div>
+    </div>
+
+    <div class="send-field">
+      <div class="modal-label">Subject</div>
+      <div class="send-preview">{{ subject() }}</div>
+    </div>
+
+    <div class="send-field">
+      <div class="modal-label">Body</div>
+      <div class="send-preview send-preview--body">{{ body() }}</div>
+    </div>
+
+    <section class="send-field" aria-labelledby="send-recipients-title">
+      <div id="send-recipients-title" class="modal-label">Recipients</div>
+      @if (recipientsFailed()) {
+        <p class="m-0 text-sm text-(--danger-ink)">
+          The recipients couldn't be loaded, so the email can't be sent. Close this window and try again.
+        </p>
+      } @else if (recipients(); as r) {
+        <div class="recipient-field">
+          <span class="recipient-field__label">To</span>
+          <div class="recipient-chips" role="list" aria-label="To recipients">
+            @for (person of r.to; track person.email) {
+              <span
+                role="listitem"
+                class="recipient-chip"
+                tabindex="0"
+                [attr.aria-label]="person.name + ', ' + person.email + ', ' + rolesOf(person)"
+                [tooltip]="person.email + '\n' + rolesOf(person)"
+              >
+                <span class="recipient-chip__avatar" aria-hidden="true">{{ initials(person.name) }}</span>
+                {{ person.name }}
+              </span>
+            } @empty {
+              <span class="recipient-field__empty">No one can be found to send this email to.</span>
+            }
+          </div>
+        </div>
+
+        <div class="recipient-field recipient-field--cc" (click)="focusCcInput($event)">
+          <span class="recipient-field__label">CC</span>
+          <div class="recipient-chips" role="list" aria-label="CC recipients">
+            @for (person of r.cc; track person.email) {
+              <span
+                role="listitem"
+                class="recipient-chip"
+                tabindex="0"
+                [attr.aria-label]="person.name + ', ' + person.email + ', ' + rolesOf(person)"
+                [tooltip]="person.email + '\n' + rolesOf(person)"
+              >
+                <span class="recipient-chip__avatar" aria-hidden="true">{{ initials(person.name) }}</span>
+                {{ person.name }}
+              </span>
+            }
+            @for (person of addedCc(); track person.id) {
+              <span
+                role="listitem"
+                class="recipient-chip recipient-chip--added"
+                tabindex="0"
+                [attr.aria-label]="fullName(person) + ', ' + person.email + ', Added by you'"
+                [tooltip]="person.email + '\nAdded by you'"
+              >
+                <span class="recipient-chip__avatar" aria-hidden="true">{{ initials(fullName(person)) }}</span>
+                {{ fullName(person) }}
+                <button
+                  type="button"
+                  class="recipient-chip__remove"
+                  [attr.aria-label]="'Remove ' + fullName(person)"
+                  (click)="removeCc(person.id)"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            }
+            <app-search-select
+              class="recipient-chips__input"
+              label="Add people to CC"
+              placeholder="Add people…"
+              [options]="ccCandidates()"
+              [clearable]="false"
+              [bare]="true"
+              (picked)="addCc($event)"
+            />
+          </div>
+        </div>
+
+        <p class="send-hint">Hover a name to see the email.</p>
+        @if (r.unresolved.length > 0) {
+          <ul class="send-hint send-hint--list">
+            @for (role of r.unresolved; track role) {
+              <li>{{ roleLabel(role) }}: no one found, so this role won't receive the email.</li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="m-0 text-sm text-(--ink-secondary)">Loading recipients…</p>
+      }
+    </section>
+
+    <label class="send-confirm">
+      <input
+        #levelCheckbox
+        type="checkbox"
+        [checked]="levelConfirmed()"
+        (change)="levelConfirmed.set(levelCheckbox.checked)"
+      />
+      <span>I confirm that I have updated the person's level in All Public.</span>
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancelled.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!canSend()" (click)="send()">Confirm and send</button>
+    </div>
+  </div>
+</div>

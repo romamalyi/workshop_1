@@ -1,0 +1,135 @@
+<div class="page-container">
+  @if (vm$ | async; as vm) {
+    <div class="emp-filter-bar">
+      <div class="emp-search-wrap">
+        <svg class="emp-search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="#9a9a9a" stroke-width="1.6" />
+          <path d="M13 13l3.5 3.5" stroke="#9a9a9a" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <input
+          class="input input--sm emp-search-input"
+          placeholder="Search by name..."
+          [value]="search$ | async"
+          (input)="onSearchChange($any($event.target).value)"
+        />
+      </div>
+
+      <div class="emp-filter-dropdowns">
+        @let selected = queryParams$ | async;
+        @if (vm.filterOptions.seniorities.length) {
+          <app-multi-select-filter
+            label="Seniority"
+            searchPlaceholder="Search seniority..."
+            [options]="vm.filterOptions.seniorities"
+            [selected]="selected?.seniorities ?? []"
+            [cleared]="isCleared('seniority')"
+            (clearedChange)="setCleared('seniority', $event)"
+            (selectedChange)="onFilterChange('seniority', $event)"
+          />
+        }
+        @if (vm.filterOptions.profiles.length) {
+          <app-multi-select-filter
+            label="Technology"
+            searchPlaceholder="Search technology..."
+            [options]="vm.filterOptions.profiles"
+            [selected]="selected?.profiles ?? []"
+            [cleared]="isCleared('profile')"
+            (clearedChange)="setCleared('profile', $event)"
+            (selectedChange)="onFilterChange('profile', $event)"
+          />
+        }
+        @if (vm.filterOptions.projects.length) {
+          <app-multi-select-filter
+            label="Project"
+            searchPlaceholder="Search project..."
+            [options]="vm.filterOptions.projects"
+            [selected]="selected?.projects ?? []"
+            [cleared]="isCleared('project')"
+            (clearedChange)="setCleared('project', $event)"
+            (selectedChange)="onFilterChange('project', $event)"
+          />
+        }
+        @if (vm.filterOptions.hrManagers.length) {
+          <app-multi-select-filter
+            label="HR"
+            searchPlaceholder="Search HR..."
+            [options]="vm.filterOptions.hrManagers"
+            [selected]="selected?.hrManagers ?? []"
+            [cleared]="isCleared('hrManager')"
+            (clearedChange)="setCleared('hrManager', $event)"
+            (selectedChange)="onFilterChange('hrManager', $event)"
+          />
+        }
+      </div>
+    </div>
+
+    @if (loading() && !loaded()) {
+      <p class="loading-text" role="status">Loading...</p>
+    }
+    @if (error()) {
+      <p class="error-text">{{ error() }}</p>
+    }
+
+    @if (loaded()) {
+      <div
+        class="data-table emp-list"
+        role="table"
+        [class.emp-list--refreshing]="loading()"
+        [attr.aria-busy]="loading()"
+        [style.--table-row-height.px]="rowHeight"
+      >
+        <div class="data-table__head" role="row">
+          <span class="data-table__th" role="columnheader">Name</span>
+          <span class="data-table__th" role="columnheader">Seniority</span>
+          <span class="data-table__th" role="columnheader">Technology</span>
+          <span class="data-table__th" role="columnheader">Projects</span>
+          <span class="data-table__th" role="columnheader">HR</span>
+        </div>
+
+        @if (vm.employees.length) {
+          <cdk-virtual-scroll-viewport
+            [itemSize]="rowHeight"
+            class="emp-vtable-viewport"
+            appFitToWindow
+            (scrolledIndexChange)="loadNextPageIfNeeded()"
+          >
+            <div
+              *cdkVirtualFor="let emp of vm.employees; trackBy: trackById"
+              class="data-table__row data-table__row--link emp-row"
+              role="row"
+              [routerLink]="emp.id ? ['/employees', emp.id] : null"
+            >
+              <span class="data-table__cell" role="cell">
+                <div class="emp-name-cell">
+                  <app-avatar [initials]="getInitials(emp)" [color]="getAvatarColor(emp)" [size]="36"></app-avatar>
+                  <span class="data-table__primary employee-name">{{ emp.firstName }} {{ emp.lastName }}</span>
+                </div>
+              </span>
+              <span class="data-table__cell data-table__muted" role="cell">{{ emp.seniority || '—' }}</span>
+              <span class="data-table__cell data-table__muted" role="cell">{{ emp.profile || '—' }}</span>
+              <span class="data-table__cell" role="cell">
+                @if (emp.projects.length) {
+                  <div class="emp-project-tags" [tooltip]="emp.projects.join('\n')">
+                    @for (proj of emp.projects.slice(0, 2); track proj) {
+                      <span class="emp-project-tag">{{ proj }}</span>
+                    }
+                    @if (emp.projects.length > 2) {
+                      <span class="emp-project-tag emp-project-tag--more">+{{ emp.projects.length - 2 }}</span>
+                    }
+                  </div>
+                } @else {
+                  <span class="data-table__muted">—</span>
+                }
+              </span>
+              <span class="data-table__cell data-table__muted" role="cell">{{ emp.hrManager || '—' }}</span>
+            </div>
+          </cdk-virtual-scroll-viewport>
+        } @else {
+          <div class="data-table__empty">No employees match the selected filters.</div>
+        }
+      </div>
+      <!-- Always in the layout, only hidden: the table is sized to the space left below it, so it must not jump. -->
+      <p class="loading-text" [class.invisible]="!loadingMore()">Loading more...</p>
+    }
+  }
+</div>

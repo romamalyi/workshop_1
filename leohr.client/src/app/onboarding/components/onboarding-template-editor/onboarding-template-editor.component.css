@@ -1,0 +1,237 @@
+.ote {
+  max-width: 680px;
+}
+
+.ote__header {
+  position: relative;
+  padding-right: 32px;
+}
+
+.ote__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.ote__due {
+  display: grid;
+  grid-template-columns: 1fr 90px 1.4fr;
+  gap: 10px;
+}
+
+.ote__hint,
+.ote__validation {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.ote__validation {
+  margin-right: auto;
+  align-self: center;
+}
+
+.ote__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ote__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ote__wrap {
+  flex-wrap: wrap;
+}
+
+.ote__grow {
+  flex: 1;
+}
+
+.ote__field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.ote__badge {
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--bg-input);
+  color: var(--ink-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ote__preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.ote__preview-head .modal-preview-label {
+  margin-bottom: 0;
+}
+
+.ote__preview-meta {
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.ote__preview-task {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ote__preview-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ote__preview-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.ote__preview {
+  gap: 14px;
+  background: var(--surface);
+}
+
+.ote__preview-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ote__preview-checks .modal-check {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.ote__stack > .modal-label {
+  margin-bottom: 0;
+}
+
+@media (max-width: 560px) {
+  .ote__due {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* <option> inherits the select colour; reset it so the empty-state colour does not carry into the list. */
+.ote__select--empty {
+  color: var(--ink-secondary);
+}
+
+.ote__select--empty option {
+  color: var(--ink);
+}
+
+.otp__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+.otp__card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #e7e7e7;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.otp__card .form-field {
+  gap: 6px;
+}
+
+.otp__card .form-field > label {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+
+.otp__card .form-field input:not([type='checkbox']),
+.otp__card .form-field select {
+  height: auto;
+  padding: 8px 10px;
+  border-color: var(--border-card);
+  font-size: 14px;
+}
+
+/* Same as the New Onboarding Flow form: the border stays neutral on focus; inputs keep the browser focus ring, selects have none. */
+.otp__card .form-field input:focus,
+.otp__card .form-field select:focus,
+.otp__card .form-field textarea:focus {
+  border-color: var(--border-card);
+}
+
+/* The global .form-field rule resets the outline, so the browser focus ring is restored for text fields. */
+.otp__card .form-field input:focus,
+.otp__card .form-field textarea:focus {
+  outline: -webkit-focus-ring-color auto 1px;
+}
+
+.otp__card .ote__hint {
+  font-size: 12px;
+}
+
+.otp__card .otp__fields {
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  background: var(--surface-subtle);
+}
+
+.otp__card .otp__fields .ote__field {
+  background: #fff;
+}
+
+.otp__note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border-left: 3px solid var(--warning);
+  border-radius: 12px;
+  background: var(--warning-subtle);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.otp__note strong {
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .otp__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

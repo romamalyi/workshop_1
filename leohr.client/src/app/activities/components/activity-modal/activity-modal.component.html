@@ -1,0 +1,68 @@
+<div class="modal-backdrop" appDialog (dialogClose)="cancel.emit()">
+  <div class="modal-box">
+    <h2 class="modal-title">{{ activity() ? 'Edit Activity' : 'New Activity' }}</h2>
+
+    <div class="modal-grid-2">
+      <div class="form-field modal-grid-2__span">
+        <label>Name</label>
+        <input class="input" [(ngModel)]="form.name" maxlength="200" placeholder="Activity name" />
+      </div>
+
+      <div class="form-field">
+        <label>Category</label>
+        <select class="input" [(ngModel)]="form.category">
+          @for (c of categories; track c) {
+            <option [value]="c">{{ c | categoryLabel }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Within Period</label>
+        <select class="input" [(ngModel)]="form.withinPeriod">
+          @for (p of periods; track p) {
+            <option [value]="p">{{ p | periodLabel }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Technology</label>
+        <select class="input" [(ngModel)]="form.technology">
+          <option [ngValue]="null">All technologies</option>
+          @for (t of technologies; track t) {
+            <option [ngValue]="t">{{ t | technologyLabel }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Points</label>
+        <input class="input" type="number" [(ngModel)]="form.points" min="0" max="1000" />
+      </div>
+    </div>
+
+    @if (activity()) {
+      <div class="form-field preserve-history-field">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="preserveHistory" />
+          <span>Preserve history</span>
+        </label>
+        <p class="helper-text">
+          @if (preserveHistory) {
+            On: creates a new version for planned and pending records. Approved records and sent promotions remain
+            unchanged and keep the old version.
+          } @else {
+            Off: updates this row in place for planned and pending records. Approved records and sent promotions remain
+            unchanged.
+          }
+        </p>
+      </div>
+    }
+
+    <div class="modal-actions">
+      <button class="btn btn--secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!isValid()" (click)="submit()">Save</button>
+    </div>
+  </div>
+</div>

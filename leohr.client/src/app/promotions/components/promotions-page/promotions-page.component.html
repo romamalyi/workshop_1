@@ -1,0 +1,290 @@
+@if (vm$ | async; as vm) {
+  @if (roadmapModalOpen()) {
+    <app-all-levels-modal
+      [technology]="userTechnology()"
+      [employeeSeniority]="userSeniority()"
+      (closeModal)="roadmapModalOpen.set(false)"
+    />
+  }
+
+  @if (modalOpen) {
+    <div class="modal-backdrop" appDialog (dialogClose)="closeModal()">
+      <div class="modal-box promo-modal">
+        <div class="modal-header">
+          <div class="modal-title">Add promotion</div>
+        </div>
+
+        <div class="form-field">
+          <div class="modal-label">Employee</div>
+          <app-search-select
+            label="Employee"
+            placeholder="Search employee…"
+            [searchByHint]="true"
+            [options]="employeeOptions(vm.employees)"
+            [selectedId]="selectedEmployeeId || null"
+            [selectedLabel]="selectedEmployeeName"
+            [clearable]="false"
+            (picked)="pickEmployee($event, vm.employees)"
+          />
+        </div>
+
+        @if (selectedEmployee) {
+          @let levels = targetLevels();
+          @if (targetLevelsLoading()) {
+            <p class="promo-modal-top-note">Loading promotion levels…</p>
+          } @else if (levels && !levels.technology) {
+            <p class="promo-modal-top-note">
+              @if (selectedEmployee.profile) {
+                The specialization "{{ selectedEmployee.profile }}" has no promotion track, so no promotion can be
+                created.
+              } @else {
+                No specialization is set for this employee, so no promotion can be created.
+              }
+            </p>
+          } @else if (levels && !levels.fromRole) {
+            <p class="promo-modal-top-note">
+              The current level "{{ selectedEmployee.seniority ?? '—' }}" isn't recognised, so no promotion level can be
+              offered.
+            </p>
+          } @else if (levels && levels.technology && levels.levels.length === 0) {
+            <p class="promo-modal-top-note">
+              No level with promotion criteria is configured above {{ levels.fromRole }} for
+              {{ levels.technology | technologyLabel }}.
+            </p>
+          } @else if (levels) {
+            <div class="form-field">
+              <div class="modal-label">Promotion</div>
+              <div class="promo-modal-arrow-row">
+                <span class="promo-modal-from">{{ levels.fromRole }}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="#24b400"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span class="promo-modal-to">{{ overrideToRole ? customToRole || '—' : autoToRole }}</span>
+                <button class="btn btn--primary btn--sm" type="button" (click)="overrideToRole = !overrideToRole">
+                  {{ overrideToRole ? 'Reset' : 'Change' }}
+                </button>
+              </div>
+              @if (overrideToRole) {
+                <div class="form-field">
+                  <app-search-select
+                    label="Promoted to"
+                    placeholder="Search level…"
+                    [options]="levelOptions()"
+                    [selectedId]="customToRole || null"
+                    [selectedLabel]="customToRole || null"
+                    [clearable]="false"
+                    (picked)="customToRole = $event?.id ?? ''"
+                  />
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Technology -->
+          @if (levels?.technology; as technology) {
+            <div class="form-field">
+              <div class="modal-label">Technology</div>
+              <div class="input flex items-center">{{ technology | technologyLabel }}</div>
+            </div>
+          }
+
+          <!-- Promotion holder -->
+          <div class="form-field">
+            <div class="modal-label">Promotion holder</div>
+            <app-search-select
+              label="Promotion holder"
+              placeholder="Search employee…"
+              [options]="holderOptions(vm.employees)"
+              [selectedId]="selectedHolderId || null"
+              [selectedLabel]="selectedHolderName"
+              [clearable]="false"
+              (picked)="pickHolder($event, vm.employees)"
+            />
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button class="btn btn--secondary" (click)="closeModal()">Cancel</button>
+          <button
+            class="btn btn--primary"
+            [disabled]="!selectedEmployeeId || !effectiveToRole || !selectedHolderId"
+            (click)="confirmAdd()"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── List ────────────────────────────────────────────────────────────── -->
+  <div class="page-container">
+    @if (showNoPromotionBanner()) {
+      <div class="page-header">
+        <div class="page-header__text">
+          <h1 class="page-title">My promotion</h1>
+        </div>
+      </div>
+      <div class="promo-empty-banner" role="status">
+        <svg
+          class="promo-empty-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+        </svg>
+        <span>
+          We don't have a promotion for you yet. You can
+          <button type="button" class="promo-empty-link" (click)="openRoadmapModal()">check other criteria</button>.
+        </span>
+      </div>
+    }
+    @if (canReadManage() || hasActivePromotion()) {
+      <div class="page-header">
+        <div class="page-header__text">
+          <h1 class="page-title">Promotions</h1>
+          <p class="page-subtitle">Open promotions, their activities and the ones ready to send.</p>
+        </div>
+        @if (canWriteManage()) {
+          <button class="btn btn--primary" type="button" (click)="openModal(vm.employees)">+ Add Promotion</button>
+        }
+      </div>
+      <div class="promo-filters">
+        <div class="promo-toolbar">
+          <div class="emp-search-wrap">
+            <svg class="emp-search-icon" viewBox="0 0 20 20" fill="none">
+              <circle cx="8.5" cy="8.5" r="5.5" stroke="#9a9a9a" stroke-width="1.6" />
+              <path d="M13 13l3.5 3.5" stroke="#9a9a9a" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <input
+              class="input input--sm emp-search-input"
+              placeholder="Search employees…"
+              autocomplete="off"
+              [ngModel]="search$ | async"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </div>
+          @if (canReadManage() && vm.hrManagers.length) {
+            <app-multi-select-filter
+              label="HR"
+              searchPlaceholder="Search HR..."
+              [options]="vm.hrManagers"
+              [selected]="(selectedHrManagers$ | async) ?? []"
+              [(cleared)]="hrCleared"
+              (selectedChange)="onHrManagersChange($event)"
+            />
+          }
+        </div>
+        <div class="line-tabs" role="tablist" aria-label="Promotion status">
+          @for (f of filters; track f.key) {
+            <button
+              type="button"
+              class="line-tab"
+              role="tab"
+              [class.line-tab--active]="(activeFilter$ | async) === f.key"
+              [attr.aria-selected]="(activeFilter$ | async) === f.key"
+              (click)="setFilter(f.key)"
+            >
+              {{ f.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <ng-template #promoHead>
+      <div class="data-table__head" aria-hidden="true">
+        <span class="data-table__th">Employee</span>
+        <span class="data-table__th">Promotion</span>
+        <span class="data-table__th">Sent on</span>
+        <span class="data-table__th">Status</span>
+      </div>
+    </ng-template>
+
+    @if (!loaded()) {
+      <p class="empty-text" role="status">Loading promotions…</p>
+    } @else if (promotions().length) {
+      <div
+        class="data-table promo-table promo-list"
+        [class.promo-list--refreshing]="loading()"
+        [attr.aria-busy]="loading()"
+        [style.--table-row-height.px]="rowHeight"
+      >
+        <ng-container [ngTemplateOutlet]="promoHead" />
+        <cdk-virtual-scroll-viewport
+          [itemSize]="rowHeight"
+          class="promo-vscroll"
+          appFitToWindow
+          (scrolledIndexChange)="loadNextPageIfNeeded()"
+        >
+          <button
+            *cdkVirtualFor="let p of promotions(); trackBy: trackById"
+            type="button"
+            class="data-table__row"
+            (click)="openDetail(p)"
+          >
+            <span class="data-table__cell promo-employee">
+              <app-avatar [initials]="getInitials(p)" [color]="getAvatarColor(p)" [size]="36"></app-avatar>
+              <span class="promo-employee-text">
+                <span class="promo-name">{{ p.firstName }} {{ p.lastName }}</span>
+                @if (p.hasPendingActivities) {
+                  <span class="badge badge--warning">Pending approvals</span>
+                }
+              </span>
+            </span>
+            <span class="data-table__cell promo-route">
+              {{ p.fromRole }}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-label="to" role="img">
+                <path
+                  d="M3 8h10M9 4l4 4-4 4"
+                  stroke="var(--success-ink)"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span class="promo-route-to">{{ p.toRole }}</span>
+            </span>
+            <span class="data-table__cell data-table__muted">{{
+              p.sentAt ? (p.sentAt | date: 'dd MMM yyyy') : '—'
+            }}</span>
+            <span class="data-table__cell"><app-badge [status]="p.status"></app-badge></span>
+          </button>
+        </cdk-virtual-scroll-viewport>
+        <p class="promo-loading-more" [hidden]="!loadingMore()" role="status">Loading more...</p>
+      </div>
+    } @else if (loadFailed()) {
+      <p class="error-text">Failed to load promotions.</p>
+    } @else if (!showNoPromotionBanner()) {
+      <div
+        class="data-table promo-table promo-list"
+        [class.promo-list--refreshing]="loading()"
+        [attr.aria-busy]="loading()"
+      >
+        <ng-container [ngTemplateOutlet]="promoHead" />
+        <div class="data-table__empty">
+          <p class="data-table__empty-title">No promotions found</p>
+          <p>Try another status tab or clear the search.</p>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="page-container">
+    <p class="empty-text" role="status">Loading promotions…</p>
+  </div>
+}

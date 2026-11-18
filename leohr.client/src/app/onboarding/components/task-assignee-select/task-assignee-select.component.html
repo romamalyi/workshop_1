@@ -1,0 +1,14 @@
+@if (noRoleHolders()) {
+  <span class="block text-[13px] text-(--ink-secondary)">{{ noRoleHoldersText.title }}</span>
+  <span class="block text-xs text-(--ink-secondary)">{{ noRoleHoldersText.hint }}</span>
+} @else {
+  <app-search-select
+    [label]="'Assign ' + taskTitle()"
+    placeholder="Assign to…"
+    [options]="options()"
+    [compact]="true"
+    [clearable]="false"
+    [disabled]="saving()"
+    (picked)="assign($event)"
+  ></app-search-select>
+}

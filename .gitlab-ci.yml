@@ -1,0 +1,179 @@
+stages:
+  - ai-review
+  - Build
+  - Test
+  - Deploy
+  - E2E
+
+include:
+  - project: 'leobit/internal-projects/leobit/ai-resources'
+    ref: master
+    file: 'code-review/gitlab/templates/claude-review.yml'
+
+variables:
+  DOTNET_VERSION: "10.0"
+  PLAYWRIGHT_VERSION: "1.63.0"
+  PROJECT: "LeoHR.Server/LeoHR.Server.csproj"
+  PUBLISH_DIR: "publish"
+
+# ---- reusable build logic ----
+.build_template: &build_template
+  stage: Build
+  image: mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}
+  before_script:
+    - apt-get update && apt-get install -y curl
+    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    - apt-get install -y nodejs
+  script:
+    # Install client deps; dotnet publish runs the Angular build itself (via the
+    # esproj), so we only restore here. The Angular configuration is passed to
+    # that build through the JS SDK's BuildCommand property.
+    - cd leohr.client
+    - npm ci --legacy-peer-deps
+    - cd ..
+    - dotnet format $PROJECT --verify-no-changes --severity warn -v n
+    - dotnet publish $PROJECT --configuration Release --output $PUBLISH_DIR /p:BuildCommand="npm run build -- --configuration=$ANGULAR_CONFIGURATION"
+  artifacts:
+    paths:
+      - $PUBLISH_DIR/
+
+build-test:
+  <<: *build_template
+  environment: Test
+  variables:
+    ANGULAR_CONFIGURATION: "test"
+  only:
+    - merge_requests
+    - develop
+
+build-production:
+  <<: *build_template
+  environment: Production
+  variables:
+    ANGULAR_CONFIGURATION: "production"
+  only:
+    - master
+
+# ---- backend integration tests ----
+# The runners can't run Docker (no dind), so Postgres is a job service instead of a Testcontainer.
+integration-test:
+  stage: Test
+  image: mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}
+  needs: []
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    POSTGRES_DB: "leohr_tests"
+    POSTGRES_USER: "leohr"
+    POSTGRES_PASSWORD: "leohr"
+    LEOHR_TEST_CONNECTION_STRING: "Host=postgres;Database=leohr_tests;Username=leohr;Password=leohr"
+  script:
+    # No Node.js in this image; the tests don't need the Angular client.
+    - dotnet test LeoHR.Server.IntegrationTests -p:ShouldRunNpmInstall=false --logger "junit;LogFilePath=$CI_PROJECT_DIR/test-results/integration-tests.xml"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: test-results/integration-tests.xml
+  only:
+    - merge_requests
+    - develop
+    - master
+
+# ---- reusable deploy logic ----
+# Single combined deployment: the .NET publish output already contains the built
+# Angular app in wwwroot/, so shipping the whole publish to /var/www/$AWS_EC2_SERVICE_NAME
+# deploys both the SPA and the API. One ASP.NET process serves both, reverse-proxied by Nginx.
+.deploy_template: &deploy_template
+  stage: Deploy
+  image: alpine:latest
+  before_script:
+    - apk add openssh-client curl
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - echo -e "${AWS_SSH_PRIVATE_KEY_BASE64}" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+  script:
+    # ---- backend (.NET app serving SPA + /api) + environment secrets, then restart ----
+    # Secrets are stored base64-encoded (so the value can be a masked CI variable
+    # with no whitespace) and decoded into secrets.{Env}.json, which Program.cs loads.
+    - echo "$SECRETS_B64" | base64 -d > "$PUBLISH_DIR/secrets.${ASPNETCORE_ENV}.json"
+    - scp -r -o StrictHostKeyChecking=no $PUBLISH_DIR/* ec2-user@$AWS_EC2_HOST:/var/www/$AWS_EC2_SERVICE_NAME
+    # Server clock, so a failed start prints only the new process's log: older lines can hold email addresses.
+    - STARTED=$(ssh -o StrictHostKeyChecking=no ec2-user@$AWS_EC2_HOST "date '+%Y-%m-%d %H:%M:%S'")
+    - ssh -o StrictHostKeyChecking=no ec2-user@$AWS_EC2_HOST "sudo systemctl restart $AWS_EC2_SERVICE_NAME"
+    # Migrations and seeding run before the app listens, so an answer here means it started.
+    - |
+      for i in $(seq 1 30); do
+        if curl -sfo /dev/null --max-time 5 "$HEALTH_URL"; then echo "App is up after ~$(( (i - 1) * 5 ))s"; break; fi
+        if [ "$i" -eq 30 ]; then
+          echo "ERROR: $HEALTH_URL did not respond within 150s. App log since restart:"
+          ssh -o StrictHostKeyChecking=no ec2-user@$AWS_EC2_HOST "sudo journalctl -u $AWS_EC2_SERVICE_NAME --since '$STARTED' -n 100 --no-pager"
+          exit 1
+        fi
+        sleep 5
+      done
+
+deploy-to-test:
+  <<: *deploy_template
+  needs: ["build-test"]
+  environment: Test
+  # One Test deploy at a time: overlapping develop pipelines would otherwise overwrite each other's build.
+  resource_group: test
+  variables:
+    ASPNETCORE_ENV: "Test"
+    SECRETS_B64: "$SECRETS_TEST_BASE64"
+    HEALTH_URL: "https://test.leohr.leobit.co/api/health/db"
+  only:
+    - develop
+
+deploy-to-production:
+  <<: *deploy_template
+  needs: ["build-production", "integration-test"]
+  environment: Production
+  when: manual
+  variables:
+    ASPNETCORE_ENV: "Production"
+    SECRETS_B64: "$SECRETS_PRODUCTION_BASE64"
+    HEALTH_URL: "https://leohr.leobit.co/api/health/db"
+  only:
+    - master
+
+# ---- end-to-end tests ----
+# Runs against the deployed Test environment; see e2e/README.md for LEOHR_E2E_ACCESS_TOKEN.
+e2e-test:
+  stage: E2E
+  # Tag must match the @playwright/test version in e2e/package.json.
+  image: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+  # Skips build and deploy, so this tests what is already deployed, not this branch.
+  needs: []
+  environment:
+    name: Test
+    action: verify
+  variables:
+    BASE_URL: "https://test.leohr.leobit.co"
+  before_script:
+    - cd e2e
+    - npm ci
+    - |
+      for i in $(seq 1 30); do
+        if curl -sfo /dev/null "$BASE_URL"; then break; fi
+        if [ "$i" -eq 30 ]; then echo "ERROR: $BASE_URL unreachable after 150s"; exit 1; fi
+        sleep 5
+      done
+  script:
+    - npx playwright test --project=chromium
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - e2e/playwright-report/
+      - e2e/test-results/
+    reports:
+      junit: e2e/results.xml
+  when: manual
+  allow_failure: true
+  only:
+    - merge_requests
+    - develop

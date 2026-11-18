@@ -1,0 +1,12 @@
+<span [tooltip]="blockedReason()">
+  <input
+    type="checkbox"
+    class="tc-check"
+    [class.tc-check--late]="status() === Status.Overdue && !isStarted()"
+    [class.tc-check--progress]="!isDone() && isStarted()"
+    [checked]="isDone()"
+    [disabled]="disabled()"
+    [attr.aria-label]="label()"
+    (click)="onCheck($event)"
+  />
+</span>

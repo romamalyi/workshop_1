@@ -1,0 +1,44 @@
+.activities-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.activities-totals {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.activities-pts {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.activities-pts-required {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.activities-counts {
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+
+.activities-pts-planned {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--info-ink);
+}
+
+.activities-empty {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--ink-secondary);
+}

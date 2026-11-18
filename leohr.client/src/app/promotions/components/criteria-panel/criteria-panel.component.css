@@ -1,0 +1,81 @@
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.criteria-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--divider);
+}
+
+.criteria-item--open {
+  cursor: pointer;
+}
+
+.criteria-item--open:hover .criteria-label {
+  color: var(--success-ink);
+}
+
+.criteria-check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.criteria-check--done {
+  border-color: var(--brand-end);
+  background: var(--brand-end);
+}
+
+.criteria-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.criteria-text {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.criteria-label {
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.criteria-item--done .criteria-check,
+.criteria-item--done .criteria-content {
+  opacity: 0.6;
+}
+
+.criteria-item--done .criteria-value {
+  text-decoration: line-through;
+}
+
+.criteria-comment {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.criteria-hint {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}

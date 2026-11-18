@@ -1,0 +1,184 @@
+<ng-template #icoTrash>
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M4 6h12M8 6V4h4v2m-6 0l1 10h6l1-10" />
+  </svg>
+</ng-template>
+
+<ng-template #icoCopy>
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M7 7h9v9H7zM13 7V4H4v9h3" />
+  </svg>
+</ng-template>
+
+<div class="ob-content">
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1 class="page-title">Task templates</h1>
+      <p class="page-subtitle">
+        {{ totalCount() }} {{ totalCount() === 1 ? 'template' : 'templates' }} · {{ activeCount() }} active ·
+        {{ phaseCount() }} {{ phaseCount() === 1 ? 'phase' : 'phases' }}
+        @if (lastEditedAtLabel()) {
+          · last edited {{ lastEditedAtLabel() }}
+          @if (lastEditedBy()) {
+            by {{ lastEditedBy() }}
+          }
+        }
+      </p>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="newTemplate()">+ New Template</button>
+  </div>
+
+  @if (!loading() && !loadFailed() && !isEmptyLibrary()) {
+    <div
+      class="mb-5 flex flex-wrap items-center gap-6 rounded-xl border-[0.5px] border-(--color-primary-border) bg-(--brand-tint) px-6 py-5 shadow-(--shadow-card) max-[880px]:flex-col max-[880px]:items-start"
+    >
+      <p class="flex-1 text-[13px] leading-normal text-slate-600">
+        Creating a flow reads every active template and instantiates all six phases at once — real dates from the due
+        rule, real people from the default assignee for each role. Editing a template changes future flows; running
+        flows keep the tasks they were given.
+      </p>
+      <div
+        class="w-1/4 shrink-0 border-l border-(--border-card) pl-6 max-[880px]:w-full max-[880px]:border-t max-[880px]:border-l-0 max-[880px]:pt-3 max-[880px]:pl-0"
+      >
+        <span class="block text-[11px] font-bold tracking-wider text-(--ink-secondary) uppercase">Every hire gets</span>
+        <span class="block text-2xl font-bold text-(--ink)">
+          {{ everyHireTaskCount() }} {{ everyHireTaskCount() === 1 ? 'task' : 'tasks' }}
+        </span>
+        <span class="mt-1 block text-[13px] leading-normal text-slate-600">
+          Plus any active Optional template ticked when the flow is created
+        </span>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="ot-phase__empty">Loading templates…</p>
+  } @else if (loadFailed()) {
+    <div class="ot-empty-library">
+      <h2 class="ot-empty-library__title">Templates couldn't be loaded</h2>
+      <p class="ot-empty-library__text">The server returned an error. Try again in a moment.</p>
+      <button type="button" class="btn btn--secondary ot-empty-library__cta" (click)="load()">Try again</button>
+    </div>
+  } @else if (isEmptyLibrary()) {
+    <div class="ot-empty-library">
+      <h2 class="ot-empty-library__title">No templates yet</h2>
+      <p class="ot-empty-library__text">
+        There are no task templates yet. Create your first one to define the onboarding work for a phase — it will be
+        used to generate tasks whenever a new onboarding flow starts.
+      </p>
+      <button type="button" class="btn btn--primary ot-empty-library__cta" (click)="newTemplate()">
+        + New Template
+      </button>
+    </div>
+  } @else {
+    @for (section of sections(); track section.key) {
+      <section class="ot-phase">
+        <header class="ot-phase__header">
+          <h2 class="ot-phase__title">{{ section.title }}</h2>
+          <span class="ot-phase__hint">{{ section.hint }}</span>
+          <span class="ot-phase__count">
+            {{ section.templates.length }} {{ section.templates.length === 1 ? 'template' : 'templates' }}
+          </span>
+        </header>
+
+        @if (section.templates.length) {
+          <ul class="ot-list">
+            @for (template of section.templates; track template.id) {
+              <li
+                class="ot-row"
+                [class.ot-row--inactive]="!template.isActive"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Edit ' + template.title"
+                (click)="openTemplate(template)"
+                (keydown.enter)="openTemplate(template)"
+                (keydown.space)="openTemplate(template); $event.preventDefault()"
+              >
+                <span class="ot-row__title">{{ template.title }}</span>
+                <span class="ot-cell ot-cell--role">{{ template.responsibleRoleName ?? '—' }}</span>
+                @if (template.isActive) {
+                  <span class="ot-cell">{{ formatDueRule(template) }}</span>
+                  <span class="ot-cell">{{ formatFieldSummary(template) }}</span>
+                } @else {
+                  <span class="ot-cell">{{ phaseLabel(template.phase) }}</span>
+                  <span class="ot-cell">{{ formatDueRule(template) }}</span>
+                }
+                <span class="ot-chip" [class.ot-chip--optional]="isOptional(template)">
+                  {{ chipLabel(template) }}
+                </span>
+                <button
+                  type="button"
+                  class="btn btn--secondary btn--sm ot-duplicate-btn"
+                  tooltip="Duplicate template"
+                  [attr.aria-label]="'Duplicate ' + template.title"
+                  (click)="duplicateTemplate(template); $event.stopPropagation()"
+                >
+                  <ng-container [ngTemplateOutlet]="icoCopy" />
+                  Duplicate
+                </button>
+                <button
+                  class="btn btn--danger btn--sm btn--icon"
+                  tooltip="Delete template"
+                  type="button"
+                  [disabled]="busyIds().has(template.id)"
+                  [attr.aria-label]="'Delete ' + template.title"
+                  (click)="requestDelete(template); $event.stopPropagation()"
+                >
+                  <ng-container [ngTemplateOutlet]="icoTrash" />
+                </button>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  [class.toggle-btn--on]="template.isActive"
+                  [attr.aria-pressed]="template.isActive"
+                  [disabled]="busyIds().has(template.id)"
+                  [attr.aria-label]="(template.isActive ? 'Deactivate ' : 'Activate ') + template.title"
+                  (click)="toggleActive(template); $event.stopPropagation()"
+                >
+                  <span class="toggle-thumb"></span>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="ot-phase__empty">No templates in this phase yet</p>
+        }
+      </section>
+    }
+  }
+</div>
+
+@if (editorOpen()) {
+  <app-onboarding-template-editor
+    [template]="editorTemplate()"
+    [saving]="saving()"
+    (save)="saveTemplate($event)"
+    (closed)="closeEditor()"
+  />
+}
+
+@if (pendingChange(); as change) {
+  <app-confirm-dialog
+    [title]="change.kind === 'delete' ? 'Delete this template?' : 'Deactivate this template?'"
+    [message]="changeMessage(change)"
+    [confirmLabel]="change.kind === 'delete' ? 'Delete' : 'Deactivate'"
+    (confirm)="confirmChange(change)"
+    (dismissed)="pendingChange.set(null)"
+  />
+}
