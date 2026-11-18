@@ -215,6 +215,7 @@ Promotions slice into the caller. Instead:
 | to change another slice's data | Call the owning slice through a small interface in `Shared/`, implemented by a dedicated `<Purpose>Service` in the owning slice. The write carries the owner's rules, and the owner saves it. When your own change must land together with it, wrap both in a transaction. |
 | data it can't reach from the database | Use the `Shared/` interface for it — the Employee API is `IEmployeeApiClient` / `IEmployeeLookup`. |
 | a business rule another slice already has | Two copies may stay; on the third, move the rule behind an interface in `Shared/`. |
+| derived state another slice already owns (e.g. `OnboardingFlowMapper.IsCompleted`) | The one exception: call that slice's service interface instead of re-implementing the rule. Read-only, one direction, never create a cycle (`OnboardingTypes` → `IOnboardingFlowsService`). |
 
 ### What goes in `Shared/`
 
@@ -428,9 +429,8 @@ If/when validation becomes too complex for attributes, we'll consider FluentVali
 
 ## 11. Error handling
 
-- Throw domain-meaningful exceptions (`NotFoundException`, `FeatureDisabledException`, etc.).
-- A global exception middleware (in `Shared/`) translates them to proper HTTP responses.
-- Services return plain result types or `bool` for found/not-found flags — controllers decide the HTTP shape.
+- Services return FluentResults `Result` / `Result<T>`; no exceptions for expected failures.
+- Controllers call `.ToActionResult()` (`Shared/Extensions/ResultExtensions.cs`), which maps the result to the HTTP response.
 
 ---
 
